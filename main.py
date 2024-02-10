@@ -1,12 +1,6 @@
-from typing import Union
-
+from routes import router as api_router
+from config import settings
 from fastapi import FastAPI
 
-app = FastAPI()
-
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
+app = FastAPI(title=settings.app_name)
+app.include_router(api_router)
