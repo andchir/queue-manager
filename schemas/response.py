@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from schemas.task import TaskSchema
+
 
 class DataResponseSuccess(BaseModel):
     success: bool
@@ -12,21 +14,8 @@ class DataResponseSuccess(BaseModel):
         }
 
 
-class DataResponseDetails(BaseModel):
-    result: str
-    details: str
-
-    class Config:
-        json_schema_extra = {
-            'example': {
-                'success': False,
-                'details': 'Item not found.'
-            }
-        }
-
-
 class DataResponseResult(BaseModel):
-    result: str
+    success: bool
     result: str
 
     class Config:
@@ -36,3 +25,19 @@ class DataResponseResult(BaseModel):
                 'result': 'Result string...'
             }
         }
+
+
+class ResponseTasksItems(BaseModel):
+    success: bool
+    items: list[TaskSchema]
+
+    class Config:
+        from_attributes = True
+
+
+class ResponseItemId(BaseModel):
+    success: bool
+    item_id: int
+
+    class Config:
+        from_attributes = True

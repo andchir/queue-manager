@@ -3,7 +3,7 @@ from typing import Union
 from fastapi import APIRouter, Depends, HTTPException, status
 from db.db import session_maker
 from repositories.tasks_repository import TasksRepository
-from schemas.response import DataResponseSuccess
+from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId
 from schemas.task import TaskAddSchema
 from utils.security import check_authentication_header
 
@@ -16,7 +16,7 @@ def read_root():
 
 
 @router.post('/tasks', name='Create Task', dependencies=[Depends(check_authentication_header)])
-def create_task(task: TaskAddSchema):
+def create_task(task: TaskAddSchema) -> Union[ResponseItemId, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
         task_id = task_repository.add_one(task.model_dump())
@@ -28,7 +28,7 @@ def create_task(task: TaskAddSchema):
 
 
 @router.get('/tasks', name='Tasks list', dependencies=[Depends(check_authentication_header)])
-def create_task():
+def create_task() -> Union[ResponseTasksItems, dict]:
 
     with session_maker() as session:
         task_repository = TasksRepository(session)
