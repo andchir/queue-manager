@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, select, update, delete
 from sqlalchemy.orm import Session
 
 
@@ -21,13 +21,14 @@ class SQLAlchemyRepository(AbstractRepository):
 
     def add_one(self, data: dict) -> int:
         self.session.begin()
+        stmt = insert(self.model).values(**data).returning(self.model.id)
         try:
-            stmt = insert(self.model).values(**data).returning(self.model.id)
             res = self.session.execute(stmt).scalar_one()
-            self.session.commit()
         except:
             self.session.rollback()
             raise
+        else:
+            self.session.commit()
         return res
 
     def find_all(self):
@@ -35,3 +36,14 @@ class SQLAlchemyRepository(AbstractRepository):
         res = self.session.execute(stmt)
         res = [row[0].to_read_model() for row in res.all()]
         return res
+
+    def delete(self, item_id: int) -> int:
+        stmt = delete(self.model).where(self.model.id == item_id)
+        try:
+            res = self.session.execute(stmt)
+        except:
+            self.session.rollback()
+            raise
+        else:
+            self.session.commit()
+        return res.rowcount
