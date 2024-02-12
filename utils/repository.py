@@ -31,17 +31,17 @@ class SQLAlchemyRepository(AbstractRepository):
             self.session.commit()
         return res
 
-    def update_one(self, data: dict, item_id: int) -> int:
+    def update_one(self, data: dict, item_id: int):
         self.session.begin()
-        stmt = update(self.model).where(self.model.id == item_id).values(**data).returning(self.model.id)
+        stmt = update(self.model).where(self.model.id == item_id).values(**data).returning(self.model)
         try:
-            res = self.session.execute(stmt).scalar_one()
+            res = self.session.execute(stmt).scalar()
         except:
             self.session.rollback()
             raise
         else:
             self.session.commit()
-        return res
+        return res.to_read_model() if res else None
 
     def find_all(self):
         stmt = select(self.model)

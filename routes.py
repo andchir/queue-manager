@@ -6,7 +6,7 @@ from sqlalchemy.exc import NoResultFound
 from db.db import session_maker
 from repositories.tasks_repository import TasksRepository
 from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId
-from schemas.task_schema import TaskAddSchema, TaskUpdateSchema
+from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema
 from utils.security import check_authentication_header
 
 router = APIRouter()
@@ -31,19 +31,19 @@ def create_task_action(task: TaskAddSchema) -> Union[ResponseItemId, dict]:
 
 
 @router.patch('/tasks/{item_id}', name='Update Task',
-              dependencies=[Depends(check_authentication_header)],
-              response_model=DataResponseSuccess)
-def update_task_action(task: TaskUpdateSchema, item_id: int) -> Union[DataResponseSuccess, dict]:
+              dependencies=[Depends(check_authentication_header)])
+def update_task_action(task: TaskUpdateSchema, item_id: int) -> Union[TaskSchema, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
         try:
-            task_repository.update_one(task.model_dump(exclude_unset=True), item_id)
+            res = task_repository.update_one(task.model_dump(exclude_unset=True), item_id)
         except NoResultFound:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with ID {item_id} not found.')
 
-    return {
-        'success': True
-    }
+    if res is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with ID {item_id} not found.')
+
+    return res
 
 
 @router.get('/tasks', name='Tasks list',
