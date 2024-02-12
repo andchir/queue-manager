@@ -1,6 +1,6 @@
-from sqlalchemy import ForeignKey
-from sqlalchemy import String, UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import List
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.db import Base
 import uuid
 
@@ -20,6 +20,8 @@ class Task(Base):
     title: Mapped[str] = mapped_column(String(256))
     owner: Mapped[str] = mapped_column(String(256), default=None)
     data: Mapped[str] = mapped_column(String(256), default=None)
+
+    queue: Mapped[List['Queue']] = relationship(back_populates='task', cascade='all, delete-orphan')
 
     def to_read_model(self) -> TaskSchema:
         return TaskSchema(
