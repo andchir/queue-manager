@@ -31,6 +31,18 @@ class SQLAlchemyRepository(AbstractRepository):
             self.session.commit()
         return res
 
+    def update_one(self, data: dict, item_id: int) -> int:
+        self.session.begin()
+        stmt = update(self.model).where(self.model.id == item_id).values(**data).returning(self.model.id)
+        try:
+            res = self.session.execute(stmt).scalar_one()
+        except:
+            self.session.rollback()
+            raise
+        else:
+            self.session.commit()
+        return res
+
     def find_all(self):
         stmt = select(self.model)
         res = self.session.execute(stmt)

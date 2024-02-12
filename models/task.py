@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from db.db import Base
 import uuid
 
-from schemas.task import TaskSchema
+from schemas.task_schema import TaskSchema
 
 
 def generate_uuid():

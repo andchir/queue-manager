@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from schemas.task import TaskSchema
+from schemas.task_schema import TaskSchema
 
 
 class DataResponseSuccess(BaseModel):
@@ -14,15 +14,15 @@ class DataResponseSuccess(BaseModel):
         }
 
 
-class DataResponseResult(BaseModel):
+class DataResponseMessage(BaseModel):
     success: bool
-    result: str
+    msg: str
 
     class Config:
         json_schema_extra = {
             'example': {
                 'success': False,
-                'result': 'Result string...'
+                'msg': 'Item not found.'
             }
         }
 
