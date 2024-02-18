@@ -24,7 +24,7 @@ class Queue(Base):
     time_updated: Mapped[str] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
 
     task_id: Mapped[int] = mapped_column(ForeignKey('tasks.id'))
-    task = relationship('models.task.Task', back_populates='queue', cascade='save-update', lazy='subquery')
+    task = relationship('models.task.Task', back_populates='queue', lazy='subquery')
 
     def to_read_model(self) -> QueueSchema:
         return QueueSchema(
