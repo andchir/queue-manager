@@ -7,8 +7,8 @@ from db.db import session_maker
 from repositories.queue_repository import QueueRepository
 from repositories.tasks_repository import TasksRepository
 from schemas.queue_schema import QueueAddSchema
-from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId
-from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema
+from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId, ResponseQueueItems
+from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
 from utils.security import check_authentication_header
 
 router = APIRouter()
@@ -48,6 +48,18 @@ def update_task_action(task: TaskUpdateSchema, task_id: int) -> Union[TaskSchema
     return res
 
 
+@router.get('/tasks/{task_id}', name='View task', tags=['Tasks'],
+            dependencies=[Depends(check_authentication_header)])
+def get_tasks_action(task_id: int) -> Union[TaskDetailedSchema, dict]:
+    with session_maker() as session:
+        task_repository = TasksRepository(session)
+        res = task_repository.find_one(task_id)
+
+    if res is not None:
+        return res
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task with ID {task_id} not found.')
+
+
 @router.get('/tasks', name='Tasks list', tags=['Tasks'],
             dependencies=[Depends(check_authentication_header)],
             response_model=ResponseTasksItems)
@@ -57,7 +69,6 @@ def get_tasks_action() -> Union[ResponseTasksItems, dict]:
         res = task_repository.find_all()
 
     return {
-        'success': True,
         'items': res
     }
 
@@ -93,3 +104,16 @@ def create_queue_action(queue_item: QueueAddSchema, task_id: int) -> Union[Respo
             'queue_item_id': queue_item_id
         }
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task with ID {task_id} not found.')
+
+
+@router.get('/queue', name='Queue list', tags=['Queue'],
+            dependencies=[Depends(check_authentication_header)],
+            response_model=ResponseQueueItems)
+def get_queue_action() -> Union[ResponseQueueItems, dict]:
+    with session_maker() as session:
+        queue_repository = QueueRepository(session)
+        res = queue_repository.find_all()
+
+    return {
+        'items': res
+    }

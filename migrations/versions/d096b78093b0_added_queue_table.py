@@ -24,7 +24,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('uuid', sa.String(length=37), nullable=False),
     sa.Column('status', sa.String(length=30), nullable=False),
-    sa.Column('data', sa.String(length=256), nullable=False),
+    sa.Column('data', sa.String(length=512), nullable=False),
     sa.Column('owner', sa.String(length=256), nullable=False),
     sa.Column('time_created', sa.DateTime(timezone=True), nullable=False),
     sa.Column('time_updated', sa.DateTime(timezone=True), nullable=False),

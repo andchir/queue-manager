@@ -26,7 +26,7 @@ def upgrade() -> None:
     sa.Column('name', sa.String(length=30), nullable=False),
     sa.Column('title', sa.String(length=256), nullable=False),
     sa.Column('owner', sa.String(length=256), nullable=False),
-    sa.Column('data', sa.String(length=256), nullable=False),
+    sa.Column('data', sa.String(length=512), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###

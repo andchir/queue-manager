@@ -1,5 +1,5 @@
-from typing import Optional
 from pydantic import BaseModel
+from schemas.queue_schema import QueueSchema
 
 
 class TaskSchema(BaseModel):
@@ -9,6 +9,19 @@ class TaskSchema(BaseModel):
     title: str
     owner: str | None = None
     data: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class TaskDetailedSchema(BaseModel):
+    id: int
+    uuid: str
+    name: str
+    title: str
+    owner: str | None = None
+    data: str | None = None
+    queue: list[QueueSchema] = []
 
     class Config:
         from_attributes = True

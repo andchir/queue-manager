@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+from schemas.queue_schema import QueueSchema
 from schemas.task_schema import TaskSchema
 
 
@@ -28,7 +29,6 @@ class DataResponseMessage(BaseModel):
 
 
 class ResponseTasksItems(BaseModel):
-    success: bool
     items: list[TaskSchema]
 
     class Config:
@@ -38,6 +38,13 @@ class ResponseTasksItems(BaseModel):
 class ResponseItemId(BaseModel):
     success: bool
     item_id: int
+
+    class Config:
+        from_attributes = True
+
+
+class ResponseQueueItems(BaseModel):
+    items: list[QueueSchema]
 
     class Config:
         from_attributes = True

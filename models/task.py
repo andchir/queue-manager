@@ -13,15 +13,16 @@ def generate_uuid():
 
 class Task(Base):
     __tablename__ = 'tasks'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     uuid: Mapped[str] = mapped_column(String(128), default=generate_uuid)
     name: Mapped[str] = mapped_column(String(30))
     title: Mapped[str] = mapped_column(String(256))
     owner: Mapped[str] = mapped_column(String(256), default=None)
-    data: Mapped[str] = mapped_column(String(256), default=None)
+    data: Mapped[str] = mapped_column(String(512), default=None)
 
-    queue: Mapped[List['Queue']] = relationship(back_populates='task', cascade='all, delete-orphan')
+    queue = relationship('models.queue.Queue', back_populates='task', cascade='all, delete-orphan', lazy='subquery')
 
     def to_read_model(self) -> TaskSchema:
         return TaskSchema(
@@ -30,5 +31,6 @@ class Task(Base):
             name=self.name,
             title=self.title,
             owner=self.owner,
-            data=self.data
+            data=self.data,
+            queue=self.queue
         )
