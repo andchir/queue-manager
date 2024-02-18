@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from sqlalchemy import insert, select, update, delete
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import NoResultFound
 
 
 class AbstractRepository(ABC):
@@ -42,6 +43,13 @@ class SQLAlchemyRepository(AbstractRepository):
         else:
             self.session.commit()
         return res.to_read_model() if res else None
+
+    def find_one(self, item_id: int):
+        try:
+            obj = self.session.get_one(self.model, item_id)
+        except NoResultFound:
+            return None
+        return obj
 
     def find_all(self):
         stmt = select(self.model)

@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import NoResultFound
 
 from db.db import session_maker
+from repositories.queue_repository import QueueRepository
 from repositories.tasks_repository import TasksRepository
+from schemas.queue_schema import QueueAddSchema
 from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema
 from utils.security import check_authentication_header
@@ -17,7 +19,7 @@ def read_root():
     return {'Hello': 'World'}
 
 
-@router.post('/tasks', name='Create Task',
+@router.post('/tasks', name='Create Task', tags=['Tasks'],
              dependencies=[Depends(check_authentication_header)])
 def create_task_action(task: TaskAddSchema) -> Union[ResponseItemId, dict]:
     with session_maker() as session:
@@ -30,23 +32,23 @@ def create_task_action(task: TaskAddSchema) -> Union[ResponseItemId, dict]:
     }
 
 
-@router.patch('/tasks/{item_id}', name='Update Task',
+@router.patch('/tasks/{task_id}', name='Update Task', tags=['Tasks'],
               dependencies=[Depends(check_authentication_header)])
-def update_task_action(task: TaskUpdateSchema, item_id: int) -> Union[TaskSchema, dict]:
+def update_task_action(task: TaskUpdateSchema, task_id: int) -> Union[TaskSchema, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
         try:
-            res = task_repository.update_one(task.model_dump(exclude_unset=True), item_id)
+            res = task_repository.update_one(task.model_dump(exclude_unset=True), task_id)
         except NoResultFound:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with ID {item_id} not found.')
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with ID {task_id} not found.')
 
     if res is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with ID {item_id} not found.')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with ID {task_id} not found.')
 
     return res
 
 
-@router.get('/tasks', name='Tasks list',
+@router.get('/tasks', name='Tasks list', tags=['Tasks'],
             dependencies=[Depends(check_authentication_header)],
             response_model=ResponseTasksItems)
 def get_tasks_action() -> Union[ResponseTasksItems, dict]:
@@ -60,16 +62,34 @@ def get_tasks_action() -> Union[ResponseTasksItems, dict]:
     }
 
 
-@router.delete('/tasks/{item_id}', name='Delete task',
+@router.delete('/tasks/{task_id}', name='Delete task', tags=['Tasks'],
                dependencies=[Depends(check_authentication_header)],
                response_model=DataResponseSuccess)
-def delete_task_action(item_id: int) -> Union[DataResponseSuccess, dict]:
+def delete_task_action(task_id: int) -> Union[DataResponseSuccess, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
-        rowcount = task_repository.delete(item_id)
+        rowcount = task_repository.delete(task_id)
 
     if rowcount > 0:
         return {
             'success': True
         }
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with ID {item_id} not found.')
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with ID {task_id} not found.')
+
+
+@router.post('/queue/{task_id}', name='Create Queue Item', tags=['Queue'],
+             dependencies=[Depends(check_authentication_header)])
+def create_queue_action(queue_item: QueueAddSchema, task_id: int) -> Union[ResponseItemId, dict]:
+    with session_maker() as session:
+        task_repository = TasksRepository(session)
+        task = task_repository.find_one(task_id)
+    if task is not None:
+        with session_maker() as session:
+            queue_item.task_id = task.id
+            queue_repository = QueueRepository(session)
+            queue_item_id = queue_repository.add_one(queue_item.model_dump())
+        return {
+            'success': True,
+            'queue_item_id': queue_item_id
+        }
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task with ID {task_id} not found.')
