@@ -22,8 +22,8 @@ class Task(Base):
     owner: Mapped[str] = mapped_column(String(256), default=None)
     data: Mapped[str] = mapped_column(String(512), default=None)
 
-    queue = relationship('models.queue.Queue', back_populates='task', cascade='all, delete-orphan',
-                         single_parent=True, lazy='subquery')
+    queue = relationship('models.queue.Queue', back_populates='task', cascade='all,delete',
+                         single_parent=True, lazy='subquery', passive_deletes=True)
 
     def to_read_model(self) -> TaskSchema:
         return TaskSchema(
