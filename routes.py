@@ -6,7 +6,7 @@ from sqlalchemy.exc import NoResultFound
 from db.db import session_maker
 from repositories.queue_repository import QueueRepository
 from repositories.tasks_repository import TasksRepository
-from schemas.queue_schema import QueueAddSchema
+from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema
 from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId, ResponseQueueItems
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
 from utils.security import check_authentication_header
@@ -90,15 +90,15 @@ def delete_task_action(task_id: int) -> Union[DataResponseSuccess, dict]:
 
 @router.post('/queue/{task_id}', name='Create Queue Item', tags=['Queue'],
              dependencies=[Depends(check_authentication_header)])
-def create_queue_action(queue_item: QueueAddSchema, task_id: int) -> Union[ResponseItemId, dict]:
+def create_queue_action(queue_item: QueueUpdateSchema, task_id: int) -> Union[ResponseItemId, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
         task = task_repository.find_one(task_id)
     if task is not None:
+        queue_item_new = QueueAddSchema(status='pending', task_id=task.id, **queue_item.model_dump())
         with session_maker() as session:
-            queue_item.task_id = task.id
             queue_repository = QueueRepository(session)
-            queue_item_id = queue_repository.add_one(queue_item.model_dump())
+            queue_item_id = queue_repository.add_one(queue_item_new.model_dump())
         return {
             'success': True,
             'queue_item_id': queue_item_id

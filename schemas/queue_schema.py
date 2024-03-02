@@ -33,7 +33,6 @@ class QueueAddSchema(BaseModel):
 
 
 class QueueUpdateSchema(BaseModel):
-    status: str | None = None
     owner: str | None = None
     data: str | None = None
 
