@@ -10,9 +10,11 @@ from models.task import Task
 class QueueRepository(SQLAlchemyRepository):
     model = Queue
 
-    def find_one_next(self):
+    def find_one_next(self, task_id: int):
         try:
-            stmt = select(self.model).where(self.model.status == 'pending').order_by(self.model.id)
+            stmt = (select(self.model)
+                    .where(self.model.task_id == task_id, self.model.status == 'pending')
+                    .order_by(self.model.id))
             result = self.session.execute(stmt)
         except NoResultFound:
             return None

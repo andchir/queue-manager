@@ -20,9 +20,9 @@ class SQLAlchemyRepository(AbstractRepository):
     def __init__(self, session: Session):
         self.session = session
 
-    def add_one(self, data: dict) -> int:
+    def add_one(self, data: dict):
         self.session.begin()
-        stmt = insert(self.model).values(**data).returning(self.model.id)
+        stmt = insert(self.model).values(**data).returning(self.model)
         try:
             res = self.session.execute(stmt).scalar_one()
         except:
@@ -30,7 +30,7 @@ class SQLAlchemyRepository(AbstractRepository):
             raise
         else:
             self.session.commit()
-        return res
+        return res.to_read_model() if res else None
 
     def update_one(self, data: dict, item_id: int):
         self.session.begin()
@@ -47,6 +47,13 @@ class SQLAlchemyRepository(AbstractRepository):
     def find_one(self, item_id: int):
         try:
             obj = self.session.get_one(self.model, item_id)
+        except NoResultFound:
+            return None
+        return obj
+
+    def find_one_by_uuid(self, uuid: str):
+        try:
+            obj = self.session.query(self.model).filter_by(uuid=uuid).one()
         except NoResultFound:
             return None
         return obj

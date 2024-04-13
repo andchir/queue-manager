@@ -43,6 +43,15 @@ class ResponseItemId(BaseModel):
         from_attributes = True
 
 
+class ResponseItemUuid(BaseModel):
+    success: bool
+    uuid: str
+    url: str
+
+    class Config:
+        from_attributes = True
+
+
 class ResponseQueueItems(BaseModel):
     items: list[QueueSchema]
 

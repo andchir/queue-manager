@@ -1,3 +1,5 @@
+from enum import Enum
+
 from sqlalchemy import String, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.db import Base
@@ -5,6 +7,14 @@ import uuid
 import datetime
 
 from schemas.queue_schema import QueueSchema
+
+
+class QueueStatus(Enum):
+    PENDING = 'pending'
+    PROCESSING = 'processing'
+    COMPLETED = 'completed'
+    CANCELED = 'canceled'
+    ERROR = 'error'
 
 
 def generate_uuid():
@@ -17,7 +27,7 @@ class Queue(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     uuid: Mapped[str] = mapped_column(String(37), default=generate_uuid)
-    status: Mapped[str] = mapped_column(String(30))
+    status: Mapped[str] = mapped_column(String(30))  # pending, processing, canceled, completed, error
     data: Mapped[str] = mapped_column(String(512), default=None)
     owner: Mapped[str] = mapped_column(String(256), default=None)
     time_created: Mapped[str] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)

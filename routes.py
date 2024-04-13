@@ -1,13 +1,15 @@
 from typing import Union
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.exc import NoResultFound
 
 from db.db import session_maker
+from models.queue import QueueStatus
 from repositories.queue_repository import QueueRepository
 from repositories.tasks_repository import TasksRepository
-from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema
-from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId, ResponseQueueItems
+from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema, QueueSchema
+from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId, ResponseQueueItems, \
+    ResponseItemUuid
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
 from utils.security import check_authentication_header
 
@@ -90,18 +92,21 @@ def delete_task_action(task_id: int) -> Union[DataResponseSuccess, dict]:
 
 @router.post('/queue/{task_id}', name='Create Queue Item', tags=['Queue'],
              dependencies=[Depends(check_authentication_header)])
-def create_queue_action(queue_item: QueueUpdateSchema, task_id: int) -> Union[ResponseItemId, dict]:
+def create_queue_action(queue_item: QueueUpdateSchema, task_id: int, request: Request) -> Union[ResponseItemUuid, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
         task = task_repository.find_one(task_id)
     if task is not None:
-        queue_item_new = QueueAddSchema(status='pending', task_id=task.id, **queue_item.model_dump())
+        queue_item_new = QueueAddSchema(status=QueueStatus.PENDING, task_id=task.id, **queue_item.model_dump())
         with session_maker() as session:
             queue_repository = QueueRepository(session)
-            queue_item_id = queue_repository.add_one(queue_item_new.model_dump())
+            queue_item = queue_repository.add_one(queue_item_new.model_dump())
+        base_url = f'{request.url.scheme}://{request.client.host}'
         return {
-            'success': True,
-            'queue_item_id': queue_item_id
+            'success': True if queue_item is not None else False,
+            'uuid': queue_item.uuid if queue_item is not None else None,
+            'url': f'{base_url}/queue/{queue_item.uuid}'
+            if queue_item is not None else None
         }
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task with ID {task_id} not found.')
 
@@ -117,3 +122,28 @@ def get_queue_action() -> Union[ResponseQueueItems, dict]:
     return {
         'items': res
     }
+
+
+@router.get('/queue/{uuid}', name='Get Queue Item State', tags=['Queue'],
+            dependencies=[Depends(check_authentication_header)])
+def get_queue_action(uuid: str) -> Union[QueueSchema, dict]:
+    with session_maker() as session:
+        queue_repository = QueueRepository(session)
+        res = queue_repository.find_one_by_uuid(uuid)
+    if res is not None:
+        return res
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item with UUID "{uuid}" not found.')
+
+
+@router.get('/queue_next/{task_id}', name='Get Next Queue Item', tags=['Queue'],
+            dependencies=[Depends(check_authentication_header)])
+def get_queue_action(task_id: int) -> Union[QueueSchema, dict]:
+    with session_maker() as session:
+        queue_repository = QueueRepository(session)
+        res = queue_repository.find_one_next(task_id)
+    if res is not None:
+        queue_item = res[0]
+        result = queue_repository.update_one({'status': QueueStatus.PROCESSING}, queue_item.id)
+        return result
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
+
