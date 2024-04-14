@@ -62,7 +62,7 @@ http {
         server_name     127.0.0.1;
         location / {
             include proxy_params;
-            proxy_pass http://unix:/run/openai_api_gunicorn.sock;
+            proxy_pass http://unix:/run/queue_manager_gunicorn.sock;
             proxy_set_header   Host             $host;
             proxy_set_header   X-Real-IP        $remote_addr;
             proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
@@ -78,19 +78,14 @@ sudo nano /etc/systemd/system/queue_manager_server.service
 sudo nano /etc/systemd/system/queue_manager_server.socket
 ~~~
 
+Enable and start the socket (it will autostart at boot too):
 ~~~
-systemd-analyze verify queue_manager_server.service
+sudo systemctl start queue_manager_server.socket
+sudo systemctl enable queue_manager_server.socket
+sudo systemctl enable queue_manager_server.service
+~~~
 
-enable:
-sudo systemctl enable queue_manager_server
-sudo systemctl start queue_manager_server
-
-disable:
-sudo systemctl disable queue_manager_server
-sudo systemctl stop queue_manager_server.socket
-sudo systemctl stop queue_manager_server
-sudo systemctl status queue_manager_server
-
+~~~
 service queue_manager_server status
 service queue_manager_server restart
 

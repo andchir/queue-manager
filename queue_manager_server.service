@@ -1,6 +1,6 @@
 [Unit]
 Description=Queue Manager gunicorn daemon
-Requires=queue-manager_server.socket
+Requires=queue_manager_server.socket
 After=network.target
 
 [Service]
