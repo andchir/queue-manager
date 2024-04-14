@@ -19,10 +19,11 @@ def restore_outdated_queue_items():
         queue_repository = QueueRepository(session)
         res = queue_repository.find_by_status(QueueStatus.PROCESSING.value)
         for queue in res:
-            if (now - queue[0].time_created).total_seconds() > max_execution_time:
-                remove_ids.append(queue[0].id)
-            elif (now - queue[0].time_updated).total_seconds() > max_execution_time:
-                restore_ids.append(queue[0].id)
+            if (now - queue[0].time_updated).total_seconds() > max_execution_time:
+                if (now - queue[0].time_created).total_seconds() > max_execution_time:
+                    remove_ids.append(queue[0].id)
+                else:
+                    restore_ids.append(queue[0].id)
 
     for item_id in restore_ids:
         with session_maker() as session:

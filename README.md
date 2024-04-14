@@ -51,3 +51,13 @@ Generate API key:
 python -c "import uuid; print(str(uuid.uuid4()))"
 ~~~
 Add it to .env (API_KEYS).
+
+Nginx:
+~~~
+location / {
+    proxy_pass http://127.0.0.1:8000/; # the uvicorn server address
+    proxy_set_header   Host             $host;
+    proxy_set_header   X-Real-IP        $remote_addr;
+    proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+}
+~~~

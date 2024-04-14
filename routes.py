@@ -1,7 +1,7 @@
 import datetime
 from typing import Union
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Header, status
 from sqlalchemy.exc import NoResultFound
 
 from db.db import session_maker
@@ -143,7 +143,7 @@ def get_queue_action(uuid: str) -> Union[QueueSchema, dict]:
 
 
 @router.get('/queue_next/{task_uuid}', name='Get Next Queue Item', tags=['Queue'])
-def get_queue_next_action(task_uuid: str) -> Union[QueueSchema, dict]:
+def get_queue_next_action(task_uuid: str, user_ip: str = Header(None, alias='X-Real-IP')) -> Union[QueueSchema, dict]:
 
     restore_outdated_queue_items()
 
@@ -160,6 +160,7 @@ def get_queue_next_action(task_uuid: str) -> Union[QueueSchema, dict]:
     if res is not None:
         queue_item = res[0]
         result = queue_repository.update_one({
+            'owner': user_ip if user_ip is not None else '',
             'status': QueueStatus.PROCESSING.value,
             'time_updated': datetime.datetime.utcnow()
         }, queue_item.id)
