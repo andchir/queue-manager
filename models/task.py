@@ -19,8 +19,8 @@ class Task(Base):
     uuid: Mapped[str] = mapped_column(String(128), default=generate_uuid)
     name: Mapped[str] = mapped_column(String(30))
     title: Mapped[str] = mapped_column(String(256))
-    owner: Mapped[str] = mapped_column(String(256), default=None)
-    data: Mapped[str] = mapped_column(String(512), default=None)
+    owner: Mapped[str] = mapped_column(String(256), nullable=True, default=None)
+    data: Mapped[str] = mapped_column(String(512), nullable=True, default=None)
 
     queue = relationship('models.queue.Queue', back_populates='task', cascade='all,delete',
                          single_parent=True, lazy='subquery', passive_deletes=True)
