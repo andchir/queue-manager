@@ -8,6 +8,8 @@ class QueueSchema(BaseModel):
     status: str
     owner: str | None = None
     data: str | None = None
+    time_created: str | None = None
+    time_updated: str | None = None
 
     class Config:
         from_attributes = True

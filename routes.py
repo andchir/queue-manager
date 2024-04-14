@@ -1,3 +1,4 @@
+import datetime
 from typing import Union
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -97,11 +98,13 @@ def create_queue_action(queue_item: QueueUpdateSchema, task_id: int, request: Re
         task_repository = TasksRepository(session)
         task = task_repository.find_one(task_id)
     if task is not None:
-        queue_item_new = QueueAddSchema(status=QueueStatus.PENDING, task_id=task.id, **queue_item.model_dump())
+        queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, **queue_item.model_dump())
         with session_maker() as session:
             queue_repository = QueueRepository(session)
             queue_item = queue_repository.add_one(queue_item_new.model_dump())
         base_url = f'{request.url.scheme}://{request.client.host}'
+        if request.url.port != 80:
+            base_url += f':{request.url.port}'
         return {
             'success': True if queue_item is not None else False,
             'uuid': queue_item.uuid if queue_item is not None else None,
@@ -143,7 +146,10 @@ def get_queue_action(task_id: int) -> Union[QueueSchema, dict]:
         res = queue_repository.find_one_next(task_id)
     if res is not None:
         queue_item = res[0]
-        result = queue_repository.update_one({'status': QueueStatus.PROCESSING}, queue_item.id)
+        result = queue_repository.update_one({
+            'status': QueueStatus.PROCESSING.value,
+            'time_updated': datetime.datetime.utcnow()
+        }, queue_item.id)
         return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
 

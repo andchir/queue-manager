@@ -44,5 +44,7 @@ class Queue(Base):
             uuid=self.uuid,
             status=self.status,
             owner=self.owner,
-            data=self.data
+            data=self.data,
+            time_created=self.time_created.strftime('%Y-%m-%d %H:%M:%S'),
+            time_updated=self.time_updated.strftime('%Y-%m-%d %H:%M:%S')
         )
