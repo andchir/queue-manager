@@ -12,6 +12,7 @@ from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema, QueueSchema
 from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId, ResponseQueueItems, \
     ResponseItemUuid
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
+from utils.restore_outdated_queue_items import restore_outdated_queue_items
 from utils.security import check_authentication_header
 
 router = APIRouter()
@@ -94,6 +95,9 @@ def delete_task_action(task_id: int) -> Union[DataResponseSuccess, dict]:
 @router.post('/queue/{task_id}', name='Create Queue Item', tags=['Queue'],
              dependencies=[Depends(check_authentication_header)])
 def create_queue_action(queue_item: QueueUpdateSchema, task_id: int, request: Request) -> Union[ResponseItemUuid, dict]:
+
+    restore_outdated_queue_items()
+
     with session_maker() as session:
         task_repository = TasksRepository(session)
         task = task_repository.find_one(task_id)
@@ -141,6 +145,9 @@ def get_queue_action(uuid: str) -> Union[QueueSchema, dict]:
 @router.get('/queue_next/{task_id}', name='Get Next Queue Item', tags=['Queue'],
             dependencies=[Depends(check_authentication_header)])
 def get_queue_action(task_id: int) -> Union[QueueSchema, dict]:
+
+    restore_outdated_queue_items()
+
     with session_maker() as session:
         queue_repository = QueueRepository(session)
         res = queue_repository.find_one_next(task_id)
