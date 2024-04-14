@@ -106,7 +106,7 @@ def create_queue_action(queue_item: QueueUpdateSchema, task_id: int, request: Re
         with session_maker() as session:
             queue_repository = QueueRepository(session)
             queue_item = queue_repository.add_one(queue_item_new.model_dump())
-        base_url = f'{request.url.scheme}://{request.client.host}'
+        base_url = f'{request.url.scheme}://{request.url.hostname}'
         if request.url.port != 80:
             base_url += f':{request.url.port}'
         return {
