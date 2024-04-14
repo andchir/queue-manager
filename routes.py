@@ -54,7 +54,7 @@ def update_task_action(task: TaskUpdateSchema, task_id: int) -> Union[TaskSchema
 
 @router.get('/tasks/{task_id}', name='View task', tags=['Tasks'],
             dependencies=[Depends(check_authentication_header)])
-def get_tasks_action(task_id: int) -> Union[TaskDetailedSchema, dict]:
+def get_task_action(task_id: int) -> Union[TaskDetailedSchema, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
         res = task_repository.find_one(task_id)
@@ -67,7 +67,7 @@ def get_tasks_action(task_id: int) -> Union[TaskDetailedSchema, dict]:
 @router.get('/tasks', name='Tasks list', tags=['Tasks'],
             dependencies=[Depends(check_authentication_header)],
             response_model=ResponseTasksItems)
-def get_tasks_action() -> Union[ResponseTasksItems, dict]:
+def get_tasks_list_action() -> Union[ResponseTasksItems, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
         res = task_repository.find_all()
@@ -121,7 +121,7 @@ def create_queue_action(queue_item: QueueUpdateSchema, task_id: int, request: Re
 @router.get('/queue', name='Queue list', tags=['Queue'],
             dependencies=[Depends(check_authentication_header)],
             response_model=ResponseQueueItems)
-def get_queue_action() -> Union[ResponseQueueItems, dict]:
+def get_queue_list_action() -> Union[ResponseQueueItems, dict]:
     with session_maker() as session:
         queue_repository = QueueRepository(session)
         res = queue_repository.find_all()
@@ -142,15 +142,21 @@ def get_queue_action(uuid: str) -> Union[QueueSchema, dict]:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item with UUID "{uuid}" not found.')
 
 
-@router.get('/queue_next/{task_id}', name='Get Next Queue Item', tags=['Queue'],
-            dependencies=[Depends(check_authentication_header)])
-def get_queue_action(task_id: int) -> Union[QueueSchema, dict]:
+@router.get('/queue_next/{task_uuid}', name='Get Next Queue Item', tags=['Queue'])
+def get_queue_next_action(task_uuid: str) -> Union[QueueSchema, dict]:
 
     restore_outdated_queue_items()
 
     with session_maker() as session:
+        task_repository = TasksRepository(session)
+        task = task_repository.find_one_by_uuid(task_uuid)
+
+    if task is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task not found.')
+
+    with session_maker() as session:
         queue_repository = QueueRepository(session)
-        res = queue_repository.find_one_next(task_id)
+        res = queue_repository.find_one_next(task.id)
     if res is not None:
         queue_item = res[0]
         result = queue_repository.update_one({
@@ -162,7 +168,7 @@ def get_queue_action(task_id: int) -> Union[QueueSchema, dict]:
 
 
 @router.post('/queue_result/{uuid}', name='Send Queue Item result', tags=['Queue'])
-def get_queue_action(queue_item: QueueResultSchema, uuid: str) -> Union[QueueSchema, dict]:
+def set_queue_result_action(queue_item: QueueResultSchema, uuid: str) -> Union[QueueSchema, dict]:
 
     restore_outdated_queue_items()
 
