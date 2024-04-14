@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     api_keys: str = ''
     sqlite_db_name: str = 'app_database.db'
     max_execution_time: int = 14400
+    max_store_time: int = 43200
 
     class Config:
         env_file = '.env'
