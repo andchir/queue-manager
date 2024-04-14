@@ -161,8 +161,7 @@ def get_queue_action(task_id: int) -> Union[QueueSchema, dict]:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
 
 
-@router.post('/queue_result/{uuid}', name='Send Queue Item result', tags=['Queue'],
-            dependencies=[Depends(check_authentication_header)])
+@router.post('/queue_result/{uuid}', name='Send Queue Item result', tags=['Queue'])
 def get_queue_action(queue_item: QueueResultSchema, uuid: str) -> Union[QueueSchema, dict]:
 
     restore_outdated_queue_items()
