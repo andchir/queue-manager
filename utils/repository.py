@@ -58,8 +58,8 @@ class SQLAlchemyRepository(AbstractRepository):
             return None
         return obj
 
-    def find_all(self):
-        stmt = select(self.model)
+    def find_all(self, limit=100):
+        stmt = select(self.model).order_by(self.model.id.desc()).limit(limit)
         res = self.session.execute(stmt)
         res = [row[0].to_read_model() for row in res.all()]
         return res

@@ -8,7 +8,7 @@ from db.db import session_maker
 from models.queue import QueueStatus
 from repositories.queue_repository import QueueRepository
 from repositories.tasks_repository import TasksRepository
-from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema, QueueSchema
+from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema, QueueSchema, QueueResultSchema
 from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId, ResponseQueueItems, \
     ResponseItemUuid
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
@@ -160,3 +160,21 @@ def get_queue_action(task_id: int) -> Union[QueueSchema, dict]:
         return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
 
+
+@router.post('/queue_result/{uuid}', name='Send Queue Item result', tags=['Queue'],
+            dependencies=[Depends(check_authentication_header)])
+def get_queue_action(queue_item: QueueResultSchema, uuid: str) -> Union[QueueSchema, dict]:
+
+    restore_outdated_queue_items()
+
+    with session_maker() as session:
+        queue_repository = QueueRepository(session)
+        res = queue_repository.find_one_by_uuid(uuid)
+    if hasattr(queue_item, 'result_data') and res is not None and res.status == QueueStatus.PROCESSING.value:
+        result = queue_repository.update_one({
+            'status': QueueStatus.COMPLETED.value,
+            'result_data': queue_item.result_data,
+            'time_updated': datetime.datetime.utcnow()
+        }, res.id)
+        return result
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
