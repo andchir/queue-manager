@@ -54,10 +54,48 @@ Add it to .env (API_KEYS).
 
 Nginx:
 ~~~
-location / {
-    proxy_pass http://127.0.0.1:8000/; # the uvicorn server address
-    proxy_set_header   Host             $host;
-    proxy_set_header   X-Real-IP        $remote_addr;
-    proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+user www-data;
+...
+http {
+    server {
+        listen          80;
+        server_name     127.0.0.1;
+        location / {
+            include proxy_params;
+            proxy_pass http://unix:/run/openai_api_gunicorn.sock;
+            proxy_set_header   Host             $host;
+            proxy_set_header   X-Real-IP        $remote_addr;
+            proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        }
+    }
 }
+...
+~~~
+
+Services:
+~~~
+sudo nano /etc/systemd/system/queue_manager_server.service
+sudo nano /etc/systemd/system/queue_manager_server.socket
+~~~
+
+~~~
+systemd-analyze verify queue_manager_server.service
+
+enable:
+sudo systemctl enable queue_manager_server
+sudo systemctl start queue_manager_server
+
+disable:
+sudo systemctl disable queue_manager_server
+sudo systemctl stop queue_manager_server.socket
+sudo systemctl stop queue_manager_server
+sudo systemctl status queue_manager_server
+
+service queue_manager_server status
+service queue_manager_server restart
+
+check socket:
+file /run/queue_manager_gunicorn.sock
+
+systemctl daemon-reload
 ~~~

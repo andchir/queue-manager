@@ -1,0 +1,8 @@
+[Unit]
+Description=Queue Manager gunicorn socket
+
+[Socket]
+ListenStream=/run/queue_manager_gunicorn.sock
+
+[Install]
+WantedBy=sockets.target
