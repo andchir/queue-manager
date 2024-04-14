@@ -28,11 +28,11 @@ def read_root():
 def create_task_action(task: TaskAddSchema) -> Union[ResponseItemId, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
-        task_id = task_repository.add_one(task.model_dump())
+        task = task_repository.add_one(task.model_dump())
 
     return {
         'success': True,
-        'task_id': task_id
+        'task_id': task.id
     }
 
 
@@ -138,7 +138,7 @@ def get_queue_action(uuid: str) -> Union[QueueSchema, dict]:
         queue_repository = QueueRepository(session)
         res = queue_repository.find_one_by_uuid(uuid)
     if res is not None:
-        return res
+        return res.to_read_model()
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item with UUID "{uuid}" not found.')
 
 

@@ -1,6 +1,6 @@
 from enum import Enum
 
-from sqlalchemy import String, ForeignKey, DateTime
+from sqlalchemy import JSON, String, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.db import Base
 import uuid
@@ -28,7 +28,8 @@ class Queue(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     uuid: Mapped[str] = mapped_column(String(37), default=generate_uuid)
     status: Mapped[str] = mapped_column(String(30))  # pending, processing, canceled, completed, error
-    data: Mapped[str] = mapped_column(String(512), default=None)
+    data: Mapped[dict] = mapped_column(JSON(none_as_null=True), nullable=True, default=None)
+    result_data: Mapped[dict] = mapped_column(JSON(none_as_null=True), nullable=True, default=None)
     owner: Mapped[str] = mapped_column(String(256), default=None)
     time_created: Mapped[str] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
     time_updated: Mapped[str] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
