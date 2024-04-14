@@ -36,7 +36,11 @@ def restore_outdated_queue_items():
     for item_id in remove_ids:
         with session_maker() as session:
             queue_repository = QueueRepository(session)
-            queue_repository.delete(item_id)
+            queue_repository.update_one({
+                'status': QueueStatus.ERROR.value,
+                'time_updated': datetime.datetime.utcnow()
+            }, item_id)
+            # queue_repository.delete(item_id)
 
     return restore_ids
 
