@@ -21,14 +21,16 @@ def send_queue_result(queue_uuid, result_str):
     return r.json()
 
 
-def generate_image(prompt):
+def generate_image(prompt, negative_prompt=''):
     url = 'http://127.0.0.1:7860'
 
     payload = {
         'prompt': prompt,
+        'negative_prompt': negative_prompt,
         'steps': 20,
-        'width': 512,
-        'height': 512
+        'width': 768,
+        'height': 768,
+        'sampler_name': 'LCM'
     }
 
     response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
@@ -43,9 +45,11 @@ def generate_image(prompt):
 if __name__ == '__main__':
     queue_item = get_queue_next('c3a138bb-9b73-4543-8090-fc4f90e2bae8')
     if queue_item and 'uuid' in queue_item and 'data' in queue_item and 'prompt' in queue_item['data']:
-        result = generate_image(queue_item['data']['prompt'])
+        prompt = queue_item['data']['prompt'] if 'prompt' in queue_item['data'] else ''
+        negative_prompt = queue_item['data']['negative_prompt'] if 'negative_prompt' in queue_item['data'] else ''
+        result = generate_image(prompt, negative_prompt)
         if result:
             res = send_queue_result(queue_item['uuid'], result)
-            print(res)
+            print('Done.')
     else:
         print('Queue is empty.')
