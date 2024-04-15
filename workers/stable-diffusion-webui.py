@@ -26,7 +26,9 @@ def generate_image(prompt):
 
     payload = {
         'prompt': prompt,
-        'steps': 5
+        'steps': 20,
+        'width': 512,
+        'height': 512
     }
 
     response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
