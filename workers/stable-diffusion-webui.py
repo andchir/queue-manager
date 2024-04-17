@@ -1,5 +1,12 @@
+import os
+import sys
 import requests
 import base64
+import uuid
+
+sys.path.append(os.path.abspath('.'))
+from utils.upload_to_gdrive import upload_and_share_file
+from config import settings
 
 # https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/API
 # Start API:
@@ -30,16 +37,24 @@ def generate_image(prompt, negative_prompt=''):
         'steps': 20,
         'width': 768,
         'height': 768,
-        'sampler_name': 'LCM'
+        'sampler_name': 'LCM',
+        'save_images': False,
+        'send_images': True
     }
 
     response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
     r = response.json()
 
-    # with open("output.png", 'wb') as f:
-    #     f.write(base64.b64decode(r['images'][0]))
+    output_dir_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'output')
+    if not os.path.exists(output_dir_path):
+        os.mkdir(output_dir_path)
 
-    return 'data:image/png;base64,' + r['images'][0]
+    file_name = str(uuid.uuid1()) + '.png'
+
+    with open(os.path.join(output_dir_path, file_name), 'wb') as f:
+        f.write(base64.b64decode(r['images'][0]))
+
+    return os.path.join(output_dir_path, file_name)
 
 
 if __name__ == '__main__':
@@ -47,9 +62,10 @@ if __name__ == '__main__':
     if queue_item and 'uuid' in queue_item and 'data' in queue_item and 'prompt' in queue_item['data']:
         prompt = queue_item['data']['prompt'] if 'prompt' in queue_item['data'] else ''
         negative_prompt = queue_item['data']['negative_prompt'] if 'negative_prompt' in queue_item['data'] else ''
-        result = generate_image(prompt, negative_prompt)
-        if result:
-            res = send_queue_result(queue_item['uuid'], result)
+        file_path = generate_image(prompt, negative_prompt)
+        if file_path:
+            shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id)
+            res = send_queue_result(queue_item['uuid'], shared_file_link.replace('&export=download', '&authuser=0'))
             print('Done.')
     else:
         print('Queue is empty.')

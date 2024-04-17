@@ -1,14 +1,16 @@
 import os
-
+import sys
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
+sys.path.append(os.path.abspath('.'))
+from config import settings
+
 CLIENT_SECRET_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'client_secrets.json')
 SERVICE_ACCOUNT_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'service_secrets.json')
-
 
 def upload_and_share_file(file_path, folder_id):
     credentials = service_account.Credentials.from_service_account_file(
@@ -60,7 +62,7 @@ def upload_and_share_file_pydrive(file_path, folder_id):
 
 if __name__ == '__main__':
     file_path = '/media/andrew/KINGSTON/clip-art/wallpapers/animal-gea928f56a_1920.jpg'
-    folder_id = '1cCg3ywohyFsUNEwPOwL3ThPMiOnp1Ffg'
+    folder_id = settings.gdrive_folder_id
     # shared_file_link = upload_and_share_file_pydrive(file_path, folder_id)
     shared_file_link = upload_and_share_file(file_path, folder_id)
     print(shared_file_link)
