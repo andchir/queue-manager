@@ -4,14 +4,15 @@ from pydrive2.drive import GoogleDrive
 
 CLIENT_SECRET_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'client_secrets.json')
 
+# https://docs.iterative.ai/PyDrive2/oauth/
 
 def upload_and_share_file(file_path, folder_id):
     gauth = GoogleAuth()
 
     # settings = {
-    #     "client_config_backend": "service",
-    #     "service_config": {
-    #         "client_json_file_path": "service-secrets.json",
+    #     'client_config_backend': 'service',
+    #     'service_config': {
+    #         'client_json_file_path': 'service-secrets.json',
     #     }
     # }
     # gauth = GoogleAuth(settings=settings)
