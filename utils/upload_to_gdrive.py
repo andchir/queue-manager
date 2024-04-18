@@ -34,7 +34,9 @@ def upload_and_share_file(file_path, folder_id):
         .execute()
     )
     service.permissions().create(body={'role': 'reader', 'type': 'anyone'}, fileId=file.get('id')).execute()
-    return file.get('webContentLink')
+    # output = file.get('webContentLink')
+    output = 'https://lh3.googleusercontent.com/d/{}?authuser=1/view'.format(file.get('id'))
+    return output
 
 
 def upload_and_share_file_pydrive(file_path, folder_id):
