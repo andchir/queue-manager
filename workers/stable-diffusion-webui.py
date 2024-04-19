@@ -21,7 +21,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def get_queue_next(task_uuid):
     queue_url = 'https://queue.api2app.ru/queue_next/{}'.format(task_uuid)
     r = requests.get(url=queue_url)
-    return r.json()
+    return r.json() if r.status_code == 200 else None
 
 
 def send_queue_result(queue_uuid, result_str):
@@ -67,8 +67,7 @@ def generate_image(prompt, negative_prompt=''):
     return os.path.join(output_dir_path, file_name)
 
 
-def processing():
-    queue_item = get_queue_next('c3a138bb-9b73-4543-8090-fc4f90e2bae8')
+def processing(queue_item):
     if queue_item and 'uuid' in queue_item and 'data' in queue_item and 'prompt' in queue_item['data']:
         prompt = queue_item['data']['prompt'] if 'prompt' in queue_item['data'] else ''
         negative_prompt = queue_item['data']['negative_prompt'] if 'negative_prompt' in queue_item['data'] else ''
@@ -89,9 +88,14 @@ def processing():
             print(f'{file_path} not found.')
     else:
         print('Waiting for a task...')
+    return queue_item
 
 
 if __name__ == '__main__':
     while True:
-        processing()
-        time.sleep(10)
+        queue_item = get_queue_next('c3a138bb-9b73-4543-8090-fc4f90e2bae8')
+        if queue_item is not None:
+            processing(queue_item)
+        else:
+            print('Waiting for a task...')
+            time.sleep(10)
