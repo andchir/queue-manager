@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import requests
 import base64
 import uuid
@@ -13,6 +14,8 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/API
 # Start API:
 # python webui.py --api
+# Start worker:
+# python workers/stable-diffusion-webui.py
 
 
 def get_queue_next(task_uuid):
@@ -61,17 +64,16 @@ def generate_image(prompt, negative_prompt=''):
     with open(os.path.join(output_dir_path, file_name), 'wb') as f:
         f.write(base64.b64decode(r['images'][0]))
 
-    # del r['images']
-    # print(r)
-
     return os.path.join(output_dir_path, file_name)
 
 
-if __name__ == '__main__':
+def processing():
     queue_item = get_queue_next('c3a138bb-9b73-4543-8090-fc4f90e2bae8')
     if queue_item and 'uuid' in queue_item and 'data' in queue_item and 'prompt' in queue_item['data']:
         prompt = queue_item['data']['prompt'] if 'prompt' in queue_item['data'] else ''
         negative_prompt = queue_item['data']['negative_prompt'] if 'negative_prompt' in queue_item['data'] else ''
+        print('---------------------')
+        print('Prompt: {}'.format(prompt))
         print('Generating an image...')
         file_path = generate_image(prompt, negative_prompt)
         print('Done.')
@@ -81,8 +83,15 @@ if __name__ == '__main__':
             print('Done.')
             print('Sending the result...')
             res = send_queue_result(queue_item['uuid'], shared_file_link)
-            print('All done.')
+            print('Completed.')
+            print('---------------------')
         else:
             print(f'{file_path} not found.')
     else:
-        print('Queue is empty.')
+        print('Waiting for a task...')
+
+
+if __name__ == '__main__':
+    while True:
+        processing()
+        time.sleep(10)
