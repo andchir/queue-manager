@@ -10,10 +10,10 @@ from models.task import Task
 class QueueRepository(SQLAlchemyRepository):
     model = Queue
 
-    def find_by_status(self, status):
+    def find_by_status(self, status, task_id=None):
         try:
             stmt = (select(self.model)
-                    .where(self.model.status == status)
+                    .where(*((self.model.status == status,) if task_id is None else (self.model.task_id == task_id, self.model.status == status)))
                     .order_by(self.model.id))
             result = self.session.execute(stmt)
         except NoResultFound:

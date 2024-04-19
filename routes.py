@@ -136,9 +136,15 @@ def get_queue_list_action() -> Union[ResponseQueueItems, dict]:
 def get_queue_action(uuid: str) -> Union[QueueSchema, dict]:
     with session_maker() as session:
         queue_repository = QueueRepository(session)
-        res = queue_repository.find_one_by_uuid(uuid)
-    if res is not None:
-        return res.to_read_model()
+        queue_item = queue_repository.find_one_by_uuid(uuid)
+    if queue_item is not None:
+        with session_maker() as session:
+            queue_repository = QueueRepository(session)
+            queue_list = queue_repository.find_by_status(QueueStatus.PENDING.value, task_id=queue_item.task_id)
+            queue_index = next((index for (index, d) in enumerate(list(queue_list)) if d[0].uuid == uuid), None)
+        result = queue_item.to_read_model()
+        result.number = queue_index + 1 if queue_index is not None else 0
+        return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item with UUID "{uuid}" not found.')
 
 

@@ -11,6 +11,7 @@ class QueueSchema(BaseModel):
     result_data: dict | None = None
     time_created: str | None = None
     time_updated: str | None = None
+    number: int = 0
 
     class Config:
         from_attributes = True
