@@ -29,3 +29,5 @@ PyDrive2==1.19.0
 google-api-core==2.18.0
 google-api-python-client==2.126.0
 google-auth==2.29.0
+filetype==1.2.0
+python-multipart==0.0.9

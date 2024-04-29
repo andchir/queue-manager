@@ -1,7 +1,10 @@
 import datetime
+import json
+import os
 from typing import Union
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Header, status
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, Request, Header, status, UploadFile, File
 from sqlalchemy.exc import NoResultFound
 
 from db.db import session_maker
@@ -14,8 +17,10 @@ from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseIt
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
 from utils.restore_outdated_queue_items import restore_outdated_queue_items
 from utils.security import check_authentication_header
+from utils.upload_file import validate_file_size_type, upload_file
 
 router = APIRouter()
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 @router.get('/')
@@ -92,17 +97,37 @@ def delete_task_action(task_id: int) -> Union[DataResponseSuccess, dict]:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with ID {task_id} not found.')
 
 
-@router.post('/queue/{task_id}', name='Create Queue Item', tags=['Queue'],
+@router.post('/queue/{task_uuid}', name='Create Queue Item', tags=['Queue'],
              dependencies=[Depends(check_authentication_header)])
-def create_queue_action(queue_item: QueueUpdateSchema, task_id: int, request: Request) -> Union[ResponseItemUuid, dict]:
+def create_queue_action(
+        data: str,
+        task_uuid: str,
+        request: Request,
+        image_file: UploadFile = None
+) -> Union[ResponseItemUuid, dict]:
 
     restore_outdated_queue_items()
+    item_uuid = str(uuid.uuid1())
+
+    data = json.loads(data) if data else {}
+    if 'owner' not in data:
+        data['owner'] = ''
+    if 'data' not in data:
+        data['data'] = {}
+
+    if image_file is not None:
+        file_info = validate_file_size_type(image_file)
+        dir_path = os.path.join(ROOT_DIR, 'uploads')
+        file_name = f'{item_uuid}.{file_info.extension}'
+        if upload_file(image_file, dir_path, file_name):
+            data['data']['image_file'] = file_name
 
     with session_maker() as session:
         task_repository = TasksRepository(session)
-        task = task_repository.find_one(task_id)
+        task = task_repository.find_one_by_uuid(task_uuid)
+
     if task is not None:
-        queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, **queue_item.model_dump())
+        queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, **data)  # **data.model_dump())
         with session_maker() as session:
             queue_repository = QueueRepository(session)
             queue_item = queue_repository.add_one(queue_item_new.model_dump())
@@ -115,7 +140,7 @@ def create_queue_action(queue_item: QueueUpdateSchema, task_id: int, request: Re
             'url': f'{base_url}/queue/{queue_item.uuid}'
             if queue_item is not None else None
         }
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task with ID {task_id} not found.')
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task with UUID {task_uuid} not found.')
 
 
 @router.get('/queue', name='Queue list', tags=['Queue'],
