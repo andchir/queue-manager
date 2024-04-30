@@ -17,7 +17,7 @@ from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseIt
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
 from utils.restore_outdated_queue_items import restore_outdated_queue_items
 from utils.security import check_authentication_header
-from utils.upload_file import validate_file_size_type, upload_file
+from utils.upload_file import upload_file, delete_old_files
 
 router = APIRouter()
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -108,8 +108,6 @@ def create_queue_action(
         audio_file: UploadFile = None
 ) -> Union[ResponseItemUuid, dict]:
 
-    restore_outdated_queue_items()
-
     data = json.loads(data) if data else {}
     if 'owner' not in data:
         data['owner'] = ''
@@ -117,21 +115,27 @@ def create_queue_action(
         data['data'] = {}
 
     upload_dir_path = os.path.join(ROOT_DIR, 'uploads')
+    base_url = f'{request.url.scheme}://{request.url.hostname}'
+    if request.url.port is not None and request.url.port != 80:
+        base_url += f':{request.url.port}'
+
+    restore_outdated_queue_items()
+    delete_old_files(upload_dir_path)
 
     if image_file is not None:
         file_name = upload_file(image_file, upload_dir_path, type='image')
         if file_name:
-            data['data']['image_file'] = 'uploads/' + file_name
+            data['data']['image_file'] = f'{base_url}/uploads/{file_name}'
 
     if video_file is not None:
         file_name = upload_file(video_file, upload_dir_path, type='video')
         if file_name:
-            data['data']['video_file'] = 'uploads/' + file_name
+            data['data']['video_file'] = f'{base_url}/uploads/{file_name}'
 
     if audio_file is not None:
         file_name = upload_file(audio_file, upload_dir_path, type='audio')
         if file_name:
-            data['data']['audio_file'] = 'uploads/' + file_name
+            data['data']['audio_file'] = f'{base_url}/uploads/{file_name}'
 
     with session_maker() as session:
         task_repository = TasksRepository(session)
@@ -142,9 +146,6 @@ def create_queue_action(
         with session_maker() as session:
             queue_repository = QueueRepository(session)
             queue_item = queue_repository.add_one(queue_item_new.model_dump())
-        base_url = f'{request.url.scheme}://{request.url.hostname}'
-        if request.url.port is not None and request.url.port != 80:
-            base_url += f':{request.url.port}'
         return {
             'success': True if queue_item is not None else False,
             'uuid': queue_item.uuid if queue_item is not None else None,

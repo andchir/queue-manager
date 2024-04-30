@@ -1,5 +1,5 @@
 import os
-
+from datetime import datetime
 import uuid
 from fastapi import HTTPException, status, UploadFile
 from typing import IO
@@ -53,3 +53,16 @@ def validate_file_size_type(file: IO, type='image'):
             raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail='The file is too large.')
 
     return file_info
+
+
+def delete_old_files(dir_path, max_hours=6):
+    files_list = os.listdir(dir_path)
+    now = datetime.now()
+    deleted = 0
+    for file in files_list:
+        mtime = datetime.fromtimestamp(os.stat(os.path.join(dir_path, file)).st_mtime)
+        diff = now - mtime
+        if diff.total_seconds() / 60 / 60 > max_hours:
+            os.remove(os.path.join(dir_path, file))
+            deleted += 1
+    return deleted
