@@ -60,6 +60,11 @@ http {
     server {
         listen          80;
         server_name     127.0.0.1;
+        
+        location /uploads/ {
+            root /home/andrew/python_projects/queue-manager;
+        }
+        
         location / {
             include proxy_params;
             proxy_pass http://unix:/run/queue_manager_gunicorn.sock;
