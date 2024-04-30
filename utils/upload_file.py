@@ -24,6 +24,8 @@ def upload_file(file: UploadFile, dir_path: str, type='image'):
 
 def validate_file_size_type(file: IO, type='image'):
     IMAGE_MAX_FILE_SIZE = 10485760  # 10MB
+    AUDIO_MAX_FILE_SIZE = 10485760  # 10MB
+    VIDEO_MAX_FILE_SIZE = 104857600  # 100MB
     IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'png', 'jpeg', 'jpg']
     VIDEO_TYPES = ['video/mp4', 'video/webm', 'mp4', 'webm']
     AUDIO_TYPES = ['audio/mp3', 'audio/mpeg', 'audio/wav', 'mp3', 'wav']
@@ -49,13 +51,19 @@ def validate_file_size_type(file: IO, type='image'):
     real_file_size = 0
     for chunk in file.file:
         real_file_size += len(chunk)
-        if type == 'image' and real_file_size > IMAGE_MAX_FILE_SIZE:
+        if (
+                (type == 'image' and real_file_size > IMAGE_MAX_FILE_SIZE)
+                or (type == 'audio' and real_file_size > AUDIO_MAX_FILE_SIZE)
+                or (type == 'video' and real_file_size > VIDEO_MAX_FILE_SIZE)
+        ):
             raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail='The file is too large.')
 
     return file_info
 
 
 def delete_old_files(dir_path, max_hours=6):
+    if not os.path.isdir(dir_path):
+        return 0
     files_list = os.listdir(dir_path)
     now = datetime.now()
     deleted = 0
