@@ -1,45 +1,55 @@
 import os
+
+import uuid
 from fastapi import HTTPException, status, UploadFile
 from typing import IO
 import filetype
 
 
-def upload_file(file: UploadFile, dir_path: str, file_name: str):
+def upload_file(file: UploadFile, dir_path: str, type='image'):
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path)
+
+    item_uuid = str(uuid.uuid1())
+    file_info = validate_file_size_type(file, type=type)
+    file_name = f'{item_uuid}.{file_info.extension}'
 
     file_path = os.path.join(dir_path, file_name)
 
     contents = file.file.read()
     open(file_path, 'wb').write(contents)
 
-    return True
+    return file_name
 
 
 def validate_file_size_type(file: IO, type='image'):
     IMAGE_MAX_FILE_SIZE = 10485760  # 10MB
-    IMAGE_ALLOWED_FILE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/heic', 'image/heif', 'image/heics',
-                                'png', 'jpeg', 'jpg', 'heic', 'heif', 'heics']
+    IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'png', 'jpeg', 'jpg']
+    VIDEO_TYPES = ['video/mp4', 'video/webm', 'mp4', 'webm']
+    AUDIO_TYPES = ['audio/mp3', 'audio/mpeg', 'audio/wav', 'mp3', 'wav']
     file_info = filetype.guess(file.file)
     if file_info is None:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Unable to determine file type",
+            detail='Unable to determine file type.',
         )
 
     detected_content_type = file_info.extension.lower()
 
-    if type == 'image' and (file.content_type not in IMAGE_ALLOWED_FILE_TYPES
-                            or detected_content_type not in IMAGE_ALLOWED_FILE_TYPES):
+    if (
+            (type == 'image' and (file.content_type not in IMAGE_TYPES or detected_content_type not in IMAGE_TYPES))
+            or (type == 'video' and (file.content_type not in VIDEO_TYPES or detected_content_type not in VIDEO_TYPES))
+            or (type == 'audio' and (file.content_type not in AUDIO_TYPES or detected_content_type not in AUDIO_TYPES))
+    ):
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail='Unsupported file type',
+            detail=f'Unsupported {type} file type.',
         )
 
     real_file_size = 0
     for chunk in file.file:
         real_file_size += len(chunk)
         if type == 'image' and real_file_size > IMAGE_MAX_FILE_SIZE:
-            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail='Too large')
+            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail='The file is too large.')
 
     return file_info

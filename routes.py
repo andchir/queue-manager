@@ -100,14 +100,15 @@ def delete_task_action(task_id: int) -> Union[DataResponseSuccess, dict]:
 @router.post('/queue/{task_uuid}', name='Create Queue Item', tags=['Queue'],
              dependencies=[Depends(check_authentication_header)])
 def create_queue_action(
-        data: str,
-        task_uuid: str,
         request: Request,
-        image_file: UploadFile = None
+        task_uuid: str,
+        data: str = '',
+        image_file: UploadFile = None,
+        video_file: UploadFile = None,
+        audio_file: UploadFile = None
 ) -> Union[ResponseItemUuid, dict]:
 
     restore_outdated_queue_items()
-    item_uuid = str(uuid.uuid1())
 
     data = json.loads(data) if data else {}
     if 'owner' not in data:
@@ -115,19 +116,29 @@ def create_queue_action(
     if 'data' not in data:
         data['data'] = {}
 
+    upload_dir_path = os.path.join(ROOT_DIR, 'uploads')
+
     if image_file is not None:
-        file_info = validate_file_size_type(image_file)
-        dir_path = os.path.join(ROOT_DIR, 'uploads')
-        file_name = f'{item_uuid}.{file_info.extension}'
-        if upload_file(image_file, dir_path, file_name):
-            data['data']['image_file'] = file_name
+        file_name = upload_file(image_file, upload_dir_path, type='image')
+        if file_name:
+            data['data']['image_file'] = 'uploads/' + file_name
+
+    if video_file is not None:
+        file_name = upload_file(video_file, upload_dir_path, type='video')
+        if file_name:
+            data['data']['video_file'] = 'uploads/' + file_name
+
+    if audio_file is not None:
+        file_name = upload_file(audio_file, upload_dir_path, type='audio')
+        if file_name:
+            data['data']['audio_file'] = 'uploads/' + file_name
 
     with session_maker() as session:
         task_repository = TasksRepository(session)
         task = task_repository.find_one_by_uuid(task_uuid)
 
     if task is not None:
-        queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, **data)  # **data.model_dump())
+        queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, **data)
         with session_maker() as session:
             queue_repository = QueueRepository(session)
             queue_item = queue_repository.add_one(queue_item_new.model_dump())
