@@ -10,7 +10,8 @@ origins = [
     'http://localhost',
     'http://localhost:8001',
     'http://localhost:4200',
-    'https://api2app.ru'
+    'https://api2app.ru',
+    'https://api2app.online'
 ]
 
 app.add_middleware(
