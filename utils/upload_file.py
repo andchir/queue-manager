@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
 import uuid
+
+import requests
 from fastapi import HTTPException, status, UploadFile
 from typing import IO
 import filetype
@@ -21,6 +23,23 @@ def upload_file(file: UploadFile, dir_path: str, type='image'):
     open(file_path, 'wb').write(contents)
 
     return file_name
+
+
+def upload_from_url(dir_path: str, file_url: str):
+    if not os.path.isdir(dir_path):
+        os.mkdir(dir_path)
+
+    file_extension = file_url.split('.')[-1]
+    item_uuid = str(uuid.uuid1())
+    file_name = f'{item_uuid}.{file_extension }'
+
+    file_path = os.path.join(dir_path, file_name)
+    contents = requests.get(file_url).content
+
+    open(file_path, 'wb').write(contents)
+
+    return file_path
+
 
 
 def validate_file_size_type(file: UploadFile, type='image'):

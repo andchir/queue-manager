@@ -7,6 +7,7 @@ import uuid
 from gradio_client import Client, file
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.upload_file import upload_from_url
 from utils.upload_to_gdrive import upload_and_share_file
 from config import settings
 
@@ -34,57 +35,46 @@ def send_queue_result(queue_uuid, result_str):
     return r.json()
 
 
-def generate_image(prompt, negative_prompt=''):
-    url = 'http://127.0.0.1:7860'
-
-    payload = {
-        'prompt': prompt,
-        'negative_prompt': negative_prompt,
-        'steps': 40,
-        'width': 768,
-        'height': 768,
-        'cfg_scale': 5,
-        'sampler_name': 'DPM++ 3M SDE',
-        'scheduler': 'Exponential',
-        'sd_model_name': 'newrealityxlAllInOne_30Experimental',
-        'sd_model_hash': '69cc62d2b6',
-        'restore_faces': True,
-        'save_images': False,
-        'send_images': True
-    }
-
-    response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
-    r = response.json()
-
-    output_dir_path = os.path.join(ROOT_DIR, 'output')
-    if not os.path.exists(output_dir_path):
-        os.mkdir(output_dir_path)
-
-    file_name = str(uuid.uuid1()) + '.png'
-
-    with open(os.path.join(output_dir_path, file_name), 'wb') as f:
-        f.write(base64.b64decode(r['images'][0]))
-
-    return os.path.join(output_dir_path, file_name)
+def generate_video(image_file_path, audio_file_path):
+    client = Client('http://127.0.0.1:7860/')
+    result = client.predict(
+        source_image=file(image_file_path),
+        driven_audio=file(audio_file_path),
+        preprocess='crop',
+        still_mode=True,
+        use_enhancer=True,
+        batch_size=1,
+        size=256,
+        pose_style=0,
+        api_name='/test_1'
+    )
+    return result
 
 
 def processing(queue_item):
-    client = Client('http://127.0.0.1:7860/')
-    if queue_item:
-        print(queue_item['data'])
-        # result = client.predict(
-        #     source_image=file(
-        #         '/media/andrew/KINGSTON/work/SadTalker/input_image/1638368758_37-uhd-name-p-pricheska-reichel-grin-devushka-krasivie-f-41.jpg'),
-        #     driven_audio=file('/media/andrew/KINGSTON/work/SadTalker/input_audio/W_4_DEV_1.mp3'),
-        #     preprocess='crop',
-        #     still_mode=True,
-        #     use_enhancer=False,
-        #     batch_size=1,
-        #     size=256,
-        #     pose_style=0,
-        #     api_name='/test_1'
-        # )
-        # print(result)
+    upload_dir_path = os.path.join(ROOT_DIR, 'uploads')
+    if queue_item and 'data' in queue_item:
+        image_file_path = None
+        audio_file_path = None
+
+        if 'image_file' in queue_item['data']:
+            image_url = queue_item['data']['image_file']
+            image_file_path = upload_from_url(upload_dir_path, image_url)
+
+        if 'audio_file' in queue_item['data']:
+            audio_url = queue_item['data']['audio_file']
+            audio_file_path = upload_from_url(upload_dir_path, audio_url)
+
+        if not image_file_path or not audio_file_path:
+            return None
+
+        print('---------------------')
+        print('Generating a video...')
+        result = generate_video(image_file_path, audio_file_path)
+
+        print(result)
+
+        print('---------------------')
     else:
         print('Waiting for a task...')
     # if queue_item and 'uuid' in queue_item and 'data' in queue_item and 'prompt' in queue_item['data']:
@@ -112,7 +102,7 @@ def processing(queue_item):
 
 if __name__ == '__main__':
     while True:
-        queue_item = get_queue_next('d9600585-1449-42be-a742-5fd5e62688d6')
+        queue_item = get_queue_next('6ab19e39-99b1-47fe-b91a-1424147f3e9c')
         if queue_item is not None:
             processing(queue_item)
         else:
