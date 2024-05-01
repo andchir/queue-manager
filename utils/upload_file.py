@@ -10,19 +10,20 @@ def upload_file(file: UploadFile, dir_path: str, type='image'):
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path)
 
+    contents = file.file.read()
+
     item_uuid = str(uuid.uuid1())
     file_info = validate_file_size_type(file, type=type)
     file_name = f'{item_uuid}.{file_info.extension}'
 
     file_path = os.path.join(dir_path, file_name)
 
-    contents = file.file.read()
     open(file_path, 'wb').write(contents)
 
     return file_name
 
 
-def validate_file_size_type(file: IO, type='image'):
+def validate_file_size_type(file: UploadFile, type='image'):
     IMAGE_MAX_FILE_SIZE = 10485760  # 10MB
     AUDIO_MAX_FILE_SIZE = 10485760  # 10MB
     VIDEO_MAX_FILE_SIZE = 104857600  # 100MB
