@@ -35,6 +35,14 @@ def send_queue_result(queue_uuid, result_str):
     return r.json()
 
 
+def send_queue_error(queue_uuid, message):
+    queue_url = 'https://queue.api2app.ru/queue_error/{}'.format(queue_uuid)
+    payload = {'message': message}
+    r = requests.post(url=queue_url, data=payload)
+    print(r.json())
+    return r.json()
+
+
 def generate_video(image_file_path, audio_file_path):
     client = Client('http://127.0.0.1:7860/')
     result = client.predict(
@@ -66,43 +74,36 @@ def processing(queue_item):
             audio_file_path = upload_from_url(upload_dir_path, audio_url)
 
         if not image_file_path or not audio_file_path:
+            print('Send error message')
+            send_queue_error(queue_item['uuid'], 'Please upload image and audio files.')
             return None
+
+        print('Send error message')
+        send_queue_error(queue_item['uuid'], 'Please upload image and audio files.')
+        return None
 
         print('---------------------')
         print('Generating a video...')
         result = generate_video(image_file_path, audio_file_path)
-
-        print(result)
-
+        file_path = result['video'] if 'video' in result else None
+        if file_path and os.path.isfile(file_path):
+            print('Uploading a file to Google Drive...')
+            shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id)
+            print('Done.')
+            print('Sending the result...')
+            res = send_queue_result(queue_item['uuid'], shared_file_link)
+            print('Completed.')
+        else:
+            print(f'Output file not found.')
         print('---------------------')
     else:
         print('Waiting for a task...')
-    # if queue_item and 'uuid' in queue_item and 'data' in queue_item and 'prompt' in queue_item['data']:
-    #     prompt = queue_item['data']['prompt'] if 'prompt' in queue_item['data'] else ''
-    #     negative_prompt = queue_item['data']['negative_prompt'] if 'negative_prompt' in queue_item['data'] else ''
-    #     print('---------------------')
-    #     print('Prompt: {}'.format(prompt))
-    #     print('Generating an image...')
-    #     file_path = generate_image(prompt, negative_prompt)
-    #     print('Done.')
-    #     if file_path and os.path.isfile(file_path):
-    #         print('Uploading a file to Google Drive...')
-    #         shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id)
-    #         print('Done.')
-    #         print('Sending the result...')
-    #         res = send_queue_result(queue_item['uuid'], shared_file_link)
-    #         print('Completed.')
-    #         print('---------------------')
-    #     else:
-    #         print(f'{file_path} not found.')
-    # else:
-    #     print('Waiting for a task...')
     return queue_item
 
 
 if __name__ == '__main__':
     while True:
-        queue_item = get_queue_next('6ab19e39-99b1-47fe-b91a-1424147f3e9c')
+        queue_item = get_queue_next('6dfa6f22-5450-471c-97b5-099cdf68c511')
         if queue_item is not None:
             processing(queue_item)
         else:

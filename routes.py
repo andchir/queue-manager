@@ -4,7 +4,7 @@ import os
 from typing import Union
 
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Request, Header, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Request, Header, status, UploadFile, Form
 from sqlalchemy.exc import NoResultFound
 
 from db.db import session_maker
@@ -228,8 +228,9 @@ def set_queue_result_action(queue_item: QueueResultSchema, uuid: str) -> Union[Q
         return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
 
+
 @router.post('/queue_error/{uuid}', name='Send Queue Item error', tags=['Queue'])
-def set_queue_result_action(message: str, uuid: str) -> Union[QueueSchema, dict]:
+def set_queue_result_action(uuid: str, message: str = Form()) -> Union[QueueSchema, dict]:
     with session_maker() as session:
         queue_repository = QueueRepository(session)
         res = queue_repository.find_by_uuid_and_status(uuid, QueueStatus.PROCESSING.value)
