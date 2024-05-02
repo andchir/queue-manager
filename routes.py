@@ -218,11 +218,25 @@ def set_queue_result_action(queue_item: QueueResultSchema, uuid: str) -> Union[Q
 
     with session_maker() as session:
         queue_repository = QueueRepository(session)
-        res = queue_repository.find_one_by_uuid(uuid)
-    if hasattr(queue_item, 'result_data') and res is not None and res.status == QueueStatus.PROCESSING.value:
+        res = queue_repository.find_by_uuid_and_status(uuid, QueueStatus.PROCESSING.value)
+    if hasattr(queue_item, 'result_data') and res is not None:
         result = queue_repository.update_one({
             'status': QueueStatus.COMPLETED.value,
             'result_data': queue_item.result_data,
+            'time_updated': datetime.datetime.utcnow()
+        }, res.id)
+        return result
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
+
+@router.post('/queue_error/{uuid}', name='Send Queue Item error', tags=['Queue'])
+def set_queue_result_action(message: str, uuid: str) -> Union[QueueSchema, dict]:
+    with session_maker() as session:
+        queue_repository = QueueRepository(session)
+        res = queue_repository.find_by_uuid_and_status(uuid, QueueStatus.PROCESSING.value)
+    if res is not None:
+        result = queue_repository.update_one({
+            'status': QueueStatus.ERROR.value,
+            'result_data': {'message': message},
             'time_updated': datetime.datetime.utcnow()
         }, res.id)
         return result

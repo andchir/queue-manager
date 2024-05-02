@@ -20,6 +20,13 @@ class QueueRepository(SQLAlchemyRepository):
             return None
         return result
 
+    def find_by_uuid_and_status(self, uuid, status):
+        try:
+            obj = self.session.query(self.model).filter_by(uuid=uuid, status=status).one()
+        except NoResultFound:
+            return None
+        return obj
+
     def find_one_next(self, task_id: int):
         try:
             stmt = (select(self.model)
