@@ -43,9 +43,9 @@ def upload_from_url(dir_path: str, file_url: str):
 
 
 def validate_file_size_type(file: UploadFile, type='image'):
-    IMAGE_MAX_FILE_SIZE = 10485760  # 10MB
-    AUDIO_MAX_FILE_SIZE = 10485760  # 10MB
-    VIDEO_MAX_FILE_SIZE = 104857600  # 100MB
+    IMAGE_MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+    AUDIO_MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+    VIDEO_MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
     IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'png', 'jpeg', 'jpg']
     VIDEO_TYPES = ['video/mp4', 'video/webm', 'mp4', 'webm']
     AUDIO_TYPES = ['audio/mp3', 'audio/mpeg', 'audio/wav', 'mp3', 'wav']
