@@ -47,10 +47,10 @@ def generate_video(image_file_path, audio_file_path):
     result = client.predict(
         source_image=file(image_file_path),
         driven_audio=file(audio_file_path),
-        preprocess='crop',
+        preprocess='full',
         still_mode=True,
         use_enhancer=True,
-        batch_size=1,
+        batch_size=2,
         size=256,
         pose_style=0,
         api_name='/test_1'
