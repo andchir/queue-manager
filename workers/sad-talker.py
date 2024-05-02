@@ -39,7 +39,6 @@ def send_queue_error(queue_uuid, message):
     queue_url = 'https://queue.api2app.ru/queue_error/{}'.format(queue_uuid)
     payload = {'message': message}
     r = requests.post(url=queue_url, data=payload)
-    print(r.json())
     return r.json()
 
 
@@ -77,10 +76,6 @@ def processing(queue_item):
             print('Send error message')
             send_queue_error(queue_item['uuid'], 'Please upload image and audio files.')
             return None
-
-        print('Send error message')
-        send_queue_error(queue_item['uuid'], 'Please upload image and audio files.')
-        return None
 
         print('---------------------')
         print('Generating a video...')
