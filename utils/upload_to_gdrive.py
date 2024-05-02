@@ -12,7 +12,7 @@ from config import settings
 CLIENT_SECRET_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'client_secrets.json')
 SERVICE_ACCOUNT_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'service_secrets.json')
 
-def upload_and_share_file(file_path, folder_id):
+def upload_and_share_file(file_path, folder_id, type='image'):
     credentials = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE,
         scopes=['https://www.googleapis.com/auth/drive']
@@ -34,8 +34,9 @@ def upload_and_share_file(file_path, folder_id):
         .execute()
     )
     service.permissions().create(body={'role': 'reader', 'type': 'anyone'}, fileId=file.get('id')).execute()
-    # output = file.get('webContentLink')
-    output = 'https://lh3.googleusercontent.com/d/{}?authuser=1/view'.format(file.get('id'))
+    output = 'https://lh3.googleusercontent.com/d/{}?authuser=1/view'.format(file.get('id'))\
+        if type == 'image'\
+        else file.get('webContentLink')
     return output
 
 

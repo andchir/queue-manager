@@ -29,7 +29,7 @@ def get_queue_next(task_uuid):
 def send_queue_result(queue_uuid, result_str):
     queue_url = 'https://queue.api2app.ru/queue_result/{}'.format(queue_uuid)
     payload = {
-        'result_data': {'image': result_str}
+        'result_data': {'video': result_str}
     }
     r = requests.post(url=queue_url, json=payload)
     return r.json()
@@ -83,7 +83,7 @@ def processing(queue_item):
         file_path = result['video'] if 'video' in result else None
         if file_path and os.path.isfile(file_path):
             print('Uploading a file to Google Drive...')
-            shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id)
+            shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='video')
             print('Done.')
             print('Sending the result...')
             res = send_queue_result(queue_item['uuid'], shared_file_link)
