@@ -27,7 +27,7 @@ def get_queue_next(task_uuid):
 def send_queue_result(queue_uuid, result_str):
     queue_url = 'https://queue.api2app.ru/queue_result/{}'.format(queue_uuid)
     payload = {
-        'result_data': {'image': result_str}
+        'result_data': {'url': result_str}
     }
     r = requests.post(url=queue_url, json=payload)
     return r.json()
