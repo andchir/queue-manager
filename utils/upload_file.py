@@ -6,6 +6,20 @@ import requests
 from fastapi import HTTPException, status, UploadFile
 from typing import IO
 import filetype
+from pydub import AudioSegment
+
+
+def cut_audio_duration(file_path, max_dur=60):
+    format = file_path[-3:].lower()
+    audio = AudioSegment.from_file(file_path, format=format)
+    if audio.duration_seconds <= max_dur:
+        return file_path
+    file_path_out = file_path[0:-4] + '_' + str(max_dur) + 'sec.' + format
+    if os.path.isfile(file_path_out):
+        return file_path_out
+    audio_out = audio[:max_dur * 1000]
+    audio_out.export(file_path_out, format=format)
+    return file_path_out
 
 
 def upload_file(file: UploadFile, dir_path: str, type='image'):
@@ -94,3 +108,8 @@ def delete_old_files(dir_path, max_hours=6):
             os.remove(os.path.join(dir_path, file))
             deleted += 1
     return deleted
+
+
+if __name__ == '__main__':
+    out_path = cut_audio_duration('/media/andrew/KINGSTON/work/SadTalker/input_audio/jason_dentist_16000.wav', 20)
+    print(out_path)

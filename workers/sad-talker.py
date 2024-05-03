@@ -7,11 +7,12 @@ import uuid
 from gradio_client import Client, file
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.upload_file import upload_from_url
+from utils.upload_file import upload_from_url, cut_audio_duration
 from utils.upload_to_gdrive import upload_and_share_file
 from config import settings
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MAX_AUDIO_LENGTH = 60
 
 # https://github.com/vinthony/SadTalker.git
 # Start API:
@@ -71,6 +72,7 @@ def processing(queue_item):
         if 'audio_file' in queue_item['data']:
             audio_url = queue_item['data']['audio_file']
             audio_file_path = upload_from_url(upload_dir_path, audio_url)
+            audio_file_path = cut_audio_duration(audio_file_path, MAX_AUDIO_LENGTH)
 
         if not image_file_path or not audio_file_path:
             print('Send error message')

@@ -32,3 +32,4 @@ google-auth==2.29.0
 filetype==1.2.0
 python-multipart==0.0.9
 gradio_client==0.16.0
+pydub==0.25.1
