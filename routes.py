@@ -1,10 +1,10 @@
 import datetime
 import json
 import os
-from typing import Union
+from typing import Union, Any
 
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Request, Header, status, UploadFile, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, Header, status, UploadFile, Form, Body
 from sqlalchemy.exc import NoResultFound
 
 from db.db import session_maker
@@ -99,7 +99,7 @@ def delete_task_action(task_id: int) -> Union[DataResponseSuccess, dict]:
 
 @router.post('/queue/{task_uuid}', name='Create Queue Item', tags=['Queue'],
              dependencies=[Depends(check_authentication_header)])
-def create_queue_action(
+async def create_queue_action(
         request: Request,
         task_uuid: str,
         data: str = Form(None),
@@ -115,6 +115,10 @@ def create_queue_action(
             del data['owner']
     if 'owner' not in data:
         data['owner'] = ''
+
+    payload = await request.json()
+    if payload:
+        data['data'].update(payload)
 
     upload_dir_path = os.path.join(ROOT_DIR, 'uploads')
     base_url = f'{request.url.scheme}://{request.url.hostname}'
