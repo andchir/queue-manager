@@ -17,7 +17,7 @@ def chat_completion(question):
     url = 'http://localhost:1337/v1/chat/completions'
 
     payload = {
-        'messages': [{'content': 'Hello!', 'role': 'user'}],
+        'messages': [{'content': question, 'role': 'user'}],
         'model': 'openchat-3.5-7b',
         'stream': False,
         'max_tokens': 2048,
