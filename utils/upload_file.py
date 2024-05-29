@@ -102,6 +102,8 @@ def delete_old_files(dir_path, max_hours=6):
     now = datetime.now()
     deleted = 0
     for file in files_list:
+        if not os.path.isfile(os.path.join(dir_path, file)):
+            continue
         mtime = datetime.fromtimestamp(os.stat(os.path.join(dir_path, file)).st_mtime)
         diff = now - mtime
         if diff.total_seconds() / 60 / 60 > max_hours:

@@ -102,17 +102,19 @@ def delete_task_action(task_id: int) -> Union[DataResponseSuccess, dict]:
 def create_queue_action(
         request: Request,
         task_uuid: str,
-        data: str = '',
+        data: str = Form(None),
         image_file: UploadFile = None,
         video_file: UploadFile = None,
         audio_file: UploadFile = None
 ) -> Union[ResponseItemUuid, dict]:
 
     data = json.loads(data) if data else {}
+    if 'data' not in data:
+        data['data'] = data.copy()
+        if 'owner' in data:
+            del data['owner']
     if 'owner' not in data:
         data['owner'] = ''
-    if 'data' not in data:
-        data['data'] = {}
 
     upload_dir_path = os.path.join(ROOT_DIR, 'uploads')
     base_url = f'{request.url.scheme}://{request.url.hostname}'
