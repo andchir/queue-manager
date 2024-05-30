@@ -12,6 +12,8 @@ from utils.queue_manager import get_queue_next, send_queue_error, send_queue_res
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# https://github.com/janhq/jan
+
 
 def chat_completion(question):
     url = 'http://localhost:1337/v1/chat/completions'
