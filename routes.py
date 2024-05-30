@@ -116,9 +116,12 @@ async def create_queue_action(
     if 'owner' not in data:
         data['owner'] = ''
 
-    payload = await request.json()
-    if payload:
-        data['data'].update(payload)
+    try:
+        payload = await request.json()
+        if payload:
+            data['data'].update(payload)
+    except Exception as e:
+        print(str(e))
 
     upload_dir_path = os.path.join(ROOT_DIR, 'uploads')
     base_url = f'{request.url.scheme}://{request.url.hostname}'
