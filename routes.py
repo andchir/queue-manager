@@ -1,7 +1,8 @@
 import datetime
 import json
 import os
-from typing import Union, Any
+from typing import Union
+import requests
 
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, Header, status, UploadFile, Form, Body
@@ -18,6 +19,7 @@ from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, Tas
 from utils.restore_outdated_queue_items import restore_outdated_queue_items
 from utils.security import check_authentication_header
 from utils.upload_file import upload_file, delete_old_files
+from utils.webhook import webhook_post_result
 
 router = APIRouter()
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -239,6 +241,16 @@ def set_queue_result_action(queue_item: QueueResultSchema, uuid: str) -> Union[Q
             'result_data': queue_item.result_data,
             'time_updated': datetime.datetime.utcnow()
         }, res.id)
+
+        if result:
+            task_id = result.task_id
+            task_repository = TasksRepository(session)
+            with session_maker() as session:
+                task = task_repository.find_one(task_id)
+                if task and task.webhook_url:
+                    webhook_resp = webhook_post_result(task.webhook_url, uuid, result.status, result.result_data)
+                    # print(webhook_resp)
+
         return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
 
@@ -254,5 +266,15 @@ def set_queue_result_action(uuid: str, message: str = Form()) -> Union[QueueSche
             'result_data': {'message': message},
             'time_updated': datetime.datetime.utcnow()
         }, res.id)
+
+        if result:
+            task_id = result.task_id
+            task_repository = TasksRepository(session)
+            with session_maker() as session:
+                task = task_repository.find_one(task_id)
+                if task and task.webhook_url:
+                    webhook_resp = webhook_post_result(task.webhook_url, uuid, result.status, result.result_data)
+                    # print(webhook_resp)
+
         return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')

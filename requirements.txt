@@ -33,3 +33,4 @@ filetype==1.2.0
 python-multipart==0.0.9
 gradio_client==0.16.0
 pydub==0.25.1
+requests==2.31.0

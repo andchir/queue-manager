@@ -9,6 +9,7 @@ class TaskSchema(BaseModel):
     title: str
     owner: str | None = None
     data: str | None = None
+    webhook_url: str | None = None
 
     class Config:
         from_attributes = True
@@ -21,6 +22,7 @@ class TaskDetailedSchema(BaseModel):
     title: str
     owner: str | None = None
     data: str | None = None
+    webhook_url: str | None = None
     queue: list[QueueSchema] = []
 
     class Config:
@@ -32,6 +34,7 @@ class TaskAddSchema(BaseModel):
     title: str
     owner: str | None = None
     data: str | None = None
+    webhook_url: str | None = None
 
 
 class TaskUpdateSchema(BaseModel):
@@ -39,6 +42,7 @@ class TaskUpdateSchema(BaseModel):
     title: str | None = None
     owner: str | None = None
     data: str | None = None
+    webhook_url: str | None = None
 
     class Config:
         from_attributes = True
