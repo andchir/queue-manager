@@ -38,6 +38,7 @@ class ResponseTasksItems(BaseModel):
 class ResponseItemId(BaseModel):
     success: bool
     item_id: int
+    item_uuid: str
 
     class Config:
         from_attributes = True

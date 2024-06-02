@@ -37,7 +37,8 @@ def create_task_action(task: TaskAddSchema) -> Union[ResponseItemId, dict]:
 
     return {
         'success': True,
-        'task_id': task.id
+        'item_id': task.id,
+        'item_uuid': task.uuid
     }
 
 
