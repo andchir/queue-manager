@@ -1,5 +1,4 @@
 from enum import Enum
-
 from sqlalchemy import JSON, String, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.db import Base
@@ -47,6 +46,6 @@ class Queue(Base):
             owner=self.owner,
             data=self.data,
             result_data=self.result_data,
-            time_created=self.time_created.strftime('%Y-%m-%d %H:%M:%S'),
-            time_updated=self.time_updated.strftime('%Y-%m-%d %H:%M:%S')
+            time_created=self.time_created.strftime('%Y-%m-%d %H:%M:%S') if isinstance(self.time_created, datetime.datetime) else self.time_created,
+            time_updated=self.time_updated.strftime('%Y-%m-%d %H:%M:%S') if isinstance(self.time_updated, datetime.datetime) else self.time_updated
         )

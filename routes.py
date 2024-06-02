@@ -109,11 +109,15 @@ async def create_queue_action(
         audio_file: UploadFile = None
 ) -> Union[ResponseItemUuid, dict]:
 
-    data = json.loads(data) if data else {}
+    if data and data.startswith('{'):
+        data = json.loads(data)
+    else:
+        data = {'data': {'input': data}}
+
     if 'data' not in data:
         data['data'] = data.copy()
-        if 'owner' in data:
-            del data['owner']
+        if 'owner' in data['data']:
+            del data['data']['owner']
     if 'owner' not in data:
         data['owner'] = ''
 

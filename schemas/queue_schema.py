@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class QueueSchema(BaseModel):
@@ -9,8 +10,8 @@ class QueueSchema(BaseModel):
     owner: str | None = None
     data: dict | None = None
     result_data: dict | None = None
-    time_created: str | None = None
-    time_updated: str | None = None
+    time_created: str | datetime | None = None
+    time_updated: str | datetime | None = None
     number: int = 0
 
     class Config:
