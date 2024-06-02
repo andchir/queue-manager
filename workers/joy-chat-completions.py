@@ -59,7 +59,7 @@ def processing(queue_item):
     if result is not None:
         print('Question: ' + question)
         print('Answer: ' + result)
-        res = send_queue_result(queue_item['uuid'], result)
+        res = send_queue_result(queue_item['uuid'], result, 'result')
         print('Completed.')
     else:
         print(f'Output is empty. Send error message - Processing error.')

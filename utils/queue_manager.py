@@ -7,10 +7,10 @@ def get_queue_next(task_uuid):
     return r.json() if r.status_code == 200 else None
 
 
-def send_queue_result(queue_uuid, result_str):
+def send_queue_result(queue_uuid, result_str, key='result'):
     queue_url = 'https://queue.api2app.ru/queue_result/{}'.format(queue_uuid)
     payload = {
-        'result_data': {'url': result_str}
+        'result_data': dict(zip([key], [result_str]))
     }
     r = requests.post(url=queue_url, json=payload)
     return r.json()
