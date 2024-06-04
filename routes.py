@@ -16,7 +16,7 @@ from repositories.tasks_repository import TasksRepository
 from schemas.proxy_schema import ProxySchema, ProxyAddSchema
 from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema, QueueSchema, QueueResultSchema
 from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId, ResponseQueueItems, \
-    ResponseItemUuid
+    ResponseItemUuid, ResponseProxyItems
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
 from utils.restore_outdated_queue_items import restore_outdated_queue_items
 from utils.security import check_authentication_header
@@ -294,3 +294,31 @@ def create_proxy_action(proxy: ProxyAddSchema) -> Union[ResponseItemId, dict]:
         'item_id': proxy.id,
         'item_uuid': proxy.uuid
     }
+
+
+@router.get('/proxy', name='Proxy list', tags=['Proxy'],
+            dependencies=[Depends(check_authentication_header)],
+            response_model=ResponseProxyItems)
+def get_proxy_list_action() -> Union[ResponseProxyItems, dict]:
+    with session_maker() as session:
+        proxy_repository = ProxyRepository(session)
+        res = proxy_repository.find_all()
+
+    return {
+        'items': res
+    }
+
+
+@router.delete('/proxy/{proxy_id}', name='Delete proxy', tags=['Proxy'],
+               dependencies=[Depends(check_authentication_header)],
+               response_model=DataResponseSuccess)
+def delete_proxy_action(item_id: int) -> Union[DataResponseSuccess, dict]:
+    with session_maker() as session:
+        repository = ProxyRepository(session)
+        rowcount = repository.delete(item_id)
+
+    if rowcount > 0:
+        return {
+            'success': True
+        }
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with ID {item_id} not found.')

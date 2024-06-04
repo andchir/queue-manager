@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+from schemas.proxy_schema import ProxySchema
 from schemas.queue_schema import QueueSchema
 from schemas.task_schema import TaskSchema
 
@@ -55,6 +56,13 @@ class ResponseItemUuid(BaseModel):
 
 class ResponseQueueItems(BaseModel):
     items: list[QueueSchema]
+
+    class Config:
+        from_attributes = True
+
+
+class ResponseProxyItems(BaseModel):
+    items: list[ProxySchema]
 
     class Config:
         from_attributes = True
