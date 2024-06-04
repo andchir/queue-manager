@@ -8,6 +8,7 @@ from alembic import context
 from db.db import Base
 from models.task import Task
 from models.queue import Queue
+from models.proxy import Proxy
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

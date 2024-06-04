@@ -10,8 +10,10 @@ from sqlalchemy.exc import NoResultFound
 
 from db.db import session_maker
 from models.queue import QueueStatus
+from repositories.proxy_repository import ProxyRepository
 from repositories.queue_repository import QueueRepository
 from repositories.tasks_repository import TasksRepository
+from schemas.proxy_schema import ProxySchema, ProxyAddSchema
 from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema, QueueSchema, QueueResultSchema
 from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId, ResponseQueueItems, \
     ResponseItemUuid
@@ -278,3 +280,17 @@ def set_queue_result_action(uuid: str, message: str = Form()) -> Union[QueueSche
 
         return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
+
+
+@router.post('/proxy', name='Create Proxy Item', tags=['Proxy'],
+             dependencies=[Depends(check_authentication_header)])
+def create_proxy_action(proxy: ProxyAddSchema) -> Union[ResponseItemId, dict]:
+    with session_maker() as session:
+        proxy_repository = ProxyRepository(session)
+        proxy = proxy_repository.add_one(proxy.model_dump())
+
+    return {
+        'success': True,
+        'item_id': proxy.id,
+        'item_uuid': proxy.uuid
+    }
