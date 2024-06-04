@@ -322,3 +322,31 @@ def delete_proxy_action(item_id: int) -> Union[DataResponseSuccess, dict]:
             'success': True
         }
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with ID {item_id} not found.')
+
+
+@router.post('/proxy_post/{uuid}', name='Proxy POST request', tags=['Proxy'],
+             dependencies=[Depends(check_authentication_header)])
+async def proxy_post_action(uuid: str, request: Request) -> Union[DataResponseSuccess, dict]:
+
+    with session_maker() as session:
+        repository = ProxyRepository(session)
+        proxy_item = repository.find_one_by_uuid(uuid)
+
+    if proxy_item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with UUID {uuid} not found.')
+
+    payload = None
+    try:
+        payload = await request.json()
+    except Exception as e:
+        print(str(e))
+
+    headers = request.headers
+
+    print('payload', payload)
+    print('headers', headers)
+    print('proxy_url', proxy_item.url)
+
+    return {
+        'success': True
+    }
