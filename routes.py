@@ -341,12 +341,24 @@ async def proxy_post_action(uuid: str, request: Request) -> Union[DataResponseSu
     except Exception as e:
         print(str(e))
 
-    headers = request.headers
+    files = []
+    headers = dict(request.headers)
+    query_params = dict(request.query_params)
+    request_url = proxy_item.url
 
-    print('payload', payload)
-    print('headers', headers)
-    print('proxy_url', proxy_item.url)
+    del headers['api-key']
 
-    return {
-        'success': True
-    }
+    response = requests.request('post', request_url, data=payload, headers=headers, files=files,
+                                params=query_params, verify=False)
+
+    status_code = int(response.status_code)
+    resp_content = response.content.decode('utf-8')
+    resp_content_type = response.headers['Content-Type'] if 'Content-Type' in response.headers else None
+    resp_content_length = response.headers['Content-Length'] if 'Content-Length' in response.headers else None
+    resp_headers = dict(response.headers)
+    resp_headers['Content-Length'] = str(len(json.dumps({'detail': resp_content})) - 1)
+
+    if status_code != 200:
+        raise HTTPException(status_code=status_code, detail=resp_content, headers=resp_headers)
+
+    return json.loads(resp_content) if resp_content.startswith('{') else {'detail': resp_content}
