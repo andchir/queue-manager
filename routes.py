@@ -347,9 +347,11 @@ async def proxy_post_action(uuid: str, request: Request) -> Union[DataResponseSu
     request_url = proxy_item.url
 
     del headers['api-key']
+    del headers['content-length']
+    del headers['user-agent']
+    del headers['host']
 
-    response = requests.request('post', request_url, data=payload, headers=headers, files=files,
-                                params=query_params, verify=False)
+    response = requests.request('post', request_url, json=payload, headers=headers, params=query_params, verify=False)
 
     status_code = int(response.status_code)
     resp_content = response.content.decode('utf-8')
@@ -361,4 +363,4 @@ async def proxy_post_action(uuid: str, request: Request) -> Union[DataResponseSu
     if status_code != 200:
         raise HTTPException(status_code=status_code, detail=resp_content, headers=resp_headers)
 
-    return json.loads(resp_content) if resp_content.startswith('{') else {'detail': resp_content}
+    return json.loads(resp_content) if resp_content.startswith('{') else {'result': resp_content}
