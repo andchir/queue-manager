@@ -28,6 +28,10 @@ make
 sudo apt purge sqlite3
 sudo make install
 sqlite3 --version
+
+python -c "import sqlite3; print(sqlite3.version); print(sqlite3.sqlite_version)"
+
+https://github.com/coleifer/pysqlite3
 ~~~
 
 Create SQLite database:
