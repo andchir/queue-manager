@@ -3,6 +3,7 @@ import json
 import os
 from typing import Union
 import requests
+import codecs
 
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, Header, status, UploadFile, Form, Body
@@ -342,16 +343,17 @@ async def proxy_post_action(uuid: str, request: Request) -> Union[DataResponseSu
         print(str(e))
 
     files = []
-    headers = dict(request.headers)
+    req_headers = dict(request.headers)
     query_params = dict(request.query_params)
     request_url = proxy_item.url
 
-    del headers['api-key']
-    del headers['content-length']
-    del headers['user-agent']
-    del headers['host']
+    headers = {
+        'Content-Type': req_headers['content-type'] if 'content-type' in req_headers else 'application/json'
+    }
+    if 'authorization' in req_headers:
+        headers['Authorization'] = req_headers['authorization']
 
-    response = requests.request('post', request_url, json=payload, headers=headers, params=query_params, verify=False)
+    response = requests.request('post', request_url, json=payload, headers=headers, params=query_params, verify=True)
 
     status_code = int(response.status_code)
     try:
