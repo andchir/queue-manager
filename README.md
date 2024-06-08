@@ -1,5 +1,7 @@
 # Simple task queue manager
 
+![screenshot #1](https://github.com/andchir/queue-manager/blob/main/screenshots/001.png?raw=true)
+
 Start in development mode:
 ~~~
 uvicorn main:app --reload
