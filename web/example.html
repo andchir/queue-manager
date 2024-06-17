@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>WebSocket demo</title>
+    </head>
+    <body>
+
+        <script>
+            var createSubscription = function(uuid) {
+                if (!uuid) {
+                    return;
+                }
+                const notif = new WebSocket('ws://localhost:8765/');
+
+                notif.onmessage = function (event) {
+                    console.log('onmessage', event.data);
+                    if (event.data.match(/^(https?:\/\/)/)) {
+
+                        console.log(event.data);
+
+                        notif.close();
+                    }
+                    if (event.data.toLowerCase().indexOf('error:') === 0) {
+                        alert(event.data)
+                        notif.close();
+                    }
+                    if (event.data === 'image2video') {
+                        alert('The generation of your AI Video has been successfully completed.');
+                        notif.close();
+                    }
+                }
+
+                notif.onclose = function() {
+                    console.log('Disconnected', uuid);
+                };
+
+                notif.onopen = function() {
+                    notif.send('{"recipient_uuid": "' + uuid + '", "message": "connected"}');
+                    console.log('Connected', uuid);
+                }
+
+                notif.onerror = function(error) {
+                    console.log(uuid, error);
+                }
+            };
+
+            // Hash example: f24b9355-e807-4fba-9fe7-a9a2bd6ac3f3
+            const uuid = window.location.hash ? window.location.hash.substring(1) : '';
+            if (uuid.length > 0) {
+                createSubscription(uuid);
+            }
+        </script>
+    </body>
+</html>
