@@ -7,6 +7,7 @@ import websockets
 
 CONNECTIONS = {}
 
+
 async def register(websocket):
     tmp_uuid = str(uuid.uuid1())
     print('New connection', tmp_uuid)
