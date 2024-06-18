@@ -34,3 +34,4 @@ python-multipart==0.0.9
 gradio_client==1.0.1
 pydub==0.25.1
 requests==2.31.0
+supervisor==4.2.5

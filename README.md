@@ -105,3 +105,23 @@ file /run/queue_manager_gunicorn.sock
 
 systemctl daemon-reload
 ~~~
+
+WebSocket server:
+~~~
+sudo apt install supervisor
+
+sudo systemctl enable supervisor --now
+sudo supervisorctl status
+sudo supervisorctl reload
+
+sudo cp web/supervisord.conf /etc/supervisor/conf.d/websocket-supervisord.conf
+
+sudo systemctl status supervisor
+sudo systemctl restart supervisor
+
+python web/server.py
+supervisord -c web/supervisord.conf -n
+python -m websockets ws://localhost:8765/
+~~~
+
+

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+import os
 import uuid
 import asyncio
+import signal
 import json
 import websockets
 
@@ -16,7 +18,7 @@ async def register(websocket):
     await websocket.send('..:: Hello from the Notification Center ::..')
     try:
         async for message in websocket:
-            event = json.loads(message)
+            event = json.loads(message) if message.startswith('{') else message
             recipient_uuid = event['recipient_uuid'] if 'recipient_uuid' in event else None
             message = event['message'] if 'message' in event else ''
             if message == 'connected' and recipient_uuid:
@@ -41,7 +43,13 @@ async def register(websocket):
 
 async def main():
     print('Starting WebSocket server')
-    async with websockets.serve(register, 'localhost', 8765):
+
+    # Set the stop condition when receiving SIGTERM.
+    loop = asyncio.get_running_loop()
+    stop = loop.create_future()
+    loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
+
+    async with websockets.serve(register, host='', port=8765, reuse_port=True):
         await asyncio.Future()  # Run forever
 
 
