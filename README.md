@@ -128,6 +128,12 @@ python -m websockets ws://localhost:8765/
 
 Nginx config for WebSocket:
 ~~~
+map $http_upgrade $connection_upgrade {
+    default                     upgrade;
+    ''                          close;
+}
+
+server {
     server_name                 ws.mysite.com;
 
     server_tokens               off;
@@ -169,4 +175,5 @@ Nginx config for WebSocket:
     location / {
         try_files                          $uri @ws_server_local;
     }
+}
 ~~~
