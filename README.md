@@ -111,10 +111,12 @@ WebSocket server:
 sudo apt install supervisor
 
 sudo systemctl enable supervisor --now
+sudo supervisorctl avail
 sudo supervisorctl status
-sudo supervisorctl reload
+sudo supervisorctl status queue-websocket:queue-websocket_00
+sudo supervisorctl reload queue-websocket:queue-websocket_00
 
-sudo cp web/supervisord.conf /etc/supervisor/conf.d/websocket-supervisord.conf
+sudo cp web/supervisord.conf /etc/supervisor/conf.d/queue-websocket.conf
 
 sudo systemctl status supervisor
 sudo systemctl restart supervisor
@@ -124,4 +126,47 @@ supervisord -c web/supervisord.conf -n
 python -m websockets ws://localhost:8765/
 ~~~
 
+Nginx config for WebSocket:
+~~~
+    server_name                 ws.mysite.com;
 
+    server_tokens               off;
+    client_body_buffer_size     0;
+    client_max_body_size        0;
+    large_client_header_buffers 8 32k;
+    client_body_timeout         600;
+    client_header_timeout       600;
+    keepalive_timeout           86400;
+    send_timeout                3600;
+
+    access_log                  /var/log/nginx/ws.mysite.com_access.log;
+    error_log                   /var/log/nginx/ws.mysite.com_error.log info;
+
+    location @ws_server_local {
+
+        proxy_pass                         http://127.0.0.1:8765;
+        proxy_http_version                 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header Upgrade           $http_upgrade;
+        proxy_set_header Connection        $connection_upgrade;
+
+        proxy_ignore_client_abort          on;
+        proxy_connect_timeout              10080;
+        proxy_send_timeout                 10080;
+        proxy_read_timeout                 10080;
+        proxy_buffer_size                  64k;
+        proxy_buffers                      16 32k;
+        proxy_busy_buffers_size            64k;
+        proxy_redirect                     off;
+        proxy_request_buffering            off;
+        proxy_buffering                    off;
+        gzip_static                        off;
+    }
+
+    location / {
+        try_files                          $uri @ws_server_local;
+    }
+~~~
