@@ -21,7 +21,8 @@ class SQLAlchemyRepository(AbstractRepository):
         self.session = session
 
     def add_one(self, data: dict):
-        self.session.begin()
+        if not self.session.in_transaction():
+            self.session.begin()
         stmt = insert(self.model).values(**data).returning(self.model)
         try:
             res = self.session.execute(stmt).scalar_one()
@@ -33,7 +34,8 @@ class SQLAlchemyRepository(AbstractRepository):
         return res.to_read_model() if res else None
 
     def update_one(self, data: dict, item_id: int):
-        self.session.begin()
+        if not self.session.in_transaction():
+            self.session.begin()
         stmt = update(self.model).where(self.model.id == item_id).values(**data).returning(self.model)
         try:
             res = self.session.execute(stmt).scalar()

@@ -219,14 +219,14 @@ def get_queue_next_action(task_uuid: str, user_ip: str = Header(None, alias='X-R
     with session_maker() as session:
         queue_repository = QueueRepository(session)
         res = queue_repository.find_one_next(task.id)
-    if res is not None:
-        queue_item = res[0]
-        result = queue_repository.update_one({
-            'owner': user_ip if user_ip is not None else '',
-            'status': QueueStatus.PROCESSING.value,
-            'time_updated': datetime.datetime.utcnow()
-        }, queue_item.id)
-        return result
+        if res is not None:
+            queue_item = res[0]
+            result = queue_repository.update_one({
+                'owner': user_ip if user_ip is not None else '',
+                'status': QueueStatus.PROCESSING.value,
+                'time_updated': datetime.datetime.utcnow()
+            }, queue_item.id)
+            return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
 
 
