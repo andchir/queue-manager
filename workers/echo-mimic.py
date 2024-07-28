@@ -10,6 +10,7 @@ from config import settings
 
 # https://github.com/BadToBest/EchoMimic
 # Start API:
+# export FFMPEG_PATH=/usr/bin/ffmpeg
 # python -u webgui.py --server_port=3000
 # Start worker:
 # python workers/echo-mimic.py
