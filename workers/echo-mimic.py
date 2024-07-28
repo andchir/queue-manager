@@ -83,7 +83,7 @@ def processing(queue_item):
 if __name__ == '__main__':
     show_message = True
     while True:
-        queue_item = get_queue_next('8c595969-139a-40ec-87f5-f523d02f7f4a')
+        queue_item = get_queue_next('37ecfff5-b716-421f-b3b4-370d89acb3d1')
         if queue_item is not None:
             processing(queue_item)
             show_message = True
