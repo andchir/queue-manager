@@ -3,7 +3,11 @@ import requests
 
 def get_queue_next(task_uuid):
     queue_url = 'https://queue.api2app.ru/queue_next/{}'.format(task_uuid)
-    r = requests.get(url=queue_url)
+    try:
+        r = requests.get(url=queue_url)
+    except Exception as e:
+        print(str(e))
+        return None
     return r.json() if r.status_code == 200 else None
 
 
