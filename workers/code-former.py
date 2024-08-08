@@ -32,11 +32,6 @@ def processing(queue_item):
         send_queue_error(queue_item['uuid'], 'Please upload image file.')
         return None
 
-    if os.path.getsize(image_file_path) > 10 * 1024 * 1024:
-        print('Send error message - You cannot use a file larger than 10 MB.')
-        send_queue_error(queue_item['uuid'], 'You cannot use a file larger than 10 MB.')
-        return None
-
     print('---------------------')
     print('Processing...')
 
