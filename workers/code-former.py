@@ -51,7 +51,7 @@ def processing(queue_item):
     if file_path and os.path.isfile(file_path):
         print('Uploading a file to Google Drive...')
         shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='image')
-        print('Done.')
+        print('Done.', shared_file_link)
         print('Sending the result...')
         res = send_queue_result(queue_item['uuid'], shared_file_link)
         print('Completed.')
