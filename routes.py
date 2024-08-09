@@ -187,8 +187,8 @@ def get_queue_list_action() -> Union[ResponseQueueItems, dict]:
     }
 
 
-@router.get('/queue/{uuid}', name='Get Queue Item State', tags=['Queue'],
-            dependencies=[Depends(check_authentication_header)])
+@router.get('/queue/{uuid}', name='Get Queue Item State', tags=['Queue'])
+            # dependencies=[Depends(check_authentication_header)])
 def get_queue_action(uuid: str) -> Union[QueueSchema, dict]:
     with session_maker() as session:
         queue_repository = QueueRepository(session)
