@@ -25,7 +25,12 @@ def processing(queue_item):
 
     if 'image_file' in queue_item['data']:
         image_url = queue_item['data']['image_file']
-        image_file_path = upload_from_url(upload_dir_path, image_url)
+        try:
+            image_file_path = upload_from_url(upload_dir_path, image_url)
+        except Exception as e:
+            print(f'Error', str(e))
+            send_queue_error(queue_item['uuid'], str(e))
+            return None
 
     if not image_file_path or not os.path.isfile(image_file_path):
         print('Send error message - Please upload image file.')

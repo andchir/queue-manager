@@ -52,8 +52,7 @@ def upload_from_url(dir_path: str, file_url: str, type='image'):
 
     open(file_path, 'wb').write(contents)
 
-    file_info = validate_file_size_type(file_path=file_path, type=type)
-    print('file_info', file_info)
+    validate_file_size_type(file_path=file_path, type=type)
 
     return file_path
 
