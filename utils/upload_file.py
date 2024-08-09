@@ -103,11 +103,8 @@ def validate_file_size_type(file: UploadFile = None, file_path=None, type='image
             detail=f'Unsupported {type} file type.',
         )
 
-    real_file_size = 0
     if file is not None:
-        for chunk in file.file:
-            real_file_size += len(chunk)
-            validate_file_size(real_file_size, type=type)
+        validate_file_size(file.size, type=type)
 
     if file_path is not None:
         file_size = os.path.getsize(file_path)
