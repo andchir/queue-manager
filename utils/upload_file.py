@@ -36,7 +36,7 @@ def upload_file(file: UploadFile, dir_path: str, type='image'):
 
     open(file_path, 'wb').write(contents)
 
-    return file_info
+    return file_name
 
 
 def upload_from_url(dir_path: str, file_url: str, type='image'):
