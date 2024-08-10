@@ -201,7 +201,7 @@ def get_queue_action(uuid: str) -> Union[QueueSchema, dict]:
         result = queue_item.to_read_model()
         result.number = queue_index + 1 if queue_index is not None else 0
         return result
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item with UUID "{uuid}" not found.')
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task not found.')
 
 
 @router.get('/queue_next/{task_uuid}', name='Get Next Queue Item', tags=['Queue'])
