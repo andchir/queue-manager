@@ -1,22 +1,44 @@
 import os
-import subprocess
 import sys
 import time
 import requests
+from gradio_client import Client, file
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import settings
-from utils.upload_to_gdrive import upload_and_share_file
+from utils.queue_manager import send_queue_error, get_queue_next, send_queue_result
 from utils.upload_file import upload_from_url
-from utils.queue_manager import get_queue_next, send_queue_error, send_queue_result
+from utils.upload_to_gdrive import upload_and_share_file
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# https://github.com/sczhou/CodeFormer
+# https://github.com/KwaiVGI/LivePortrait
 # Start API:
 # python app.py
+# python app_animals.py
 # Start worker:
-# python workers/code-former.py
+# python workers/live-portrait.py
+
+
+def generate_video(image_file_path, driven_video_name):
+
+    print(image_file_path, driven_video_name)
+
+    # client = Client('http://127.0.0.1:7860/')
+    # result = client.predict(
+    #     source_image=file(image_file_path),
+    #     preprocess='full',
+    #     still_mode=True,
+    #     use_enhancer=True,
+    #     batch_size=2,
+    #     size=256,
+    #     pose_style=0,
+    #     api_name='/test_1'
+    # )
+    # return result
+
+    return {}
+
 
 def processing(queue_item):
     upload_dir_path = os.path.join(ROOT_DIR, 'uploads')
@@ -25,6 +47,7 @@ def processing(queue_item):
         send_queue_error(queue_item['uuid'], 'Processing error. Bad data.')
         return queue_item
     image_file_path = None
+    driven_video_name = queue_item['data']['input'] if 'input' in queue_item['data'] else 'default'
 
     if 'image_file' in queue_item['data']:
         image_url = queue_item['data']['image_file']
@@ -41,25 +64,13 @@ def processing(queue_item):
         return None
 
     print('---------------------')
-    print('Processing...')
-
-    dir_path = os.path.dirname(image_file_path)
-    file_basename = os.path.basename(image_file_path)
-    result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'code-former.sh'), image_file_path],
-                            capture_output=True, text=True)
-
-    print(result.stdout)
-
-    file_path = os.path.join(
-        dir_path,
-        'output',
-        'final_results',
-        file_basename.replace('.jpg', '.png').replace('.jpeg', '.png')
-    )
+    print('Generating a video...')
+    result = generate_video(image_file_path, driven_video_name)
+    file_path = result['video'] if 'video' in result else None
     if file_path and os.path.isfile(file_path):
         print('Uploading a file to Google Drive...')
-        shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='image')
-        print('Done.', shared_file_link)
+        shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='video')
+        print('Done.')
         print('Sending the result...')
         res = send_queue_result(queue_item['uuid'], shared_file_link)
         print('Completed.')
@@ -67,13 +78,12 @@ def processing(queue_item):
         print(f'Output file not found. Send error message - Processing error.')
         send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
     print('---------------------')
-    return queue_item
 
 
 if __name__ == '__main__':
     show_message = True
     while True:
-        queue_item = get_queue_next('8c595969-139a-40ec-87f5-f523d02f7f4a')
+        queue_item = get_queue_next('304a0d98-216b-45d2-bf63-56811e49ab6b')
         if queue_item is not None:
             processing(queue_item)
             show_message = True
