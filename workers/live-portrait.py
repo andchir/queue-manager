@@ -22,16 +22,26 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # python workers/live-portrait.py
 
 
+def prefix(filename):
+    """a.jpg -> a"""
+    pos = filename.rfind(".")
+    if pos == -1:
+        return filename
+    return filename[:pos]
+
+
+def basename(filename):
+    """a/b/c.jpg -> c"""
+    return prefix(os.path.basename(filename))
+
+
 def generate_video(image_file_path, driven_video_name):
-
-    print(image_file_path, driven_video_name)
-
     driving_video_path = None
     if driven_video_name in ['Живой портрет', 'Живой Портрет']:
         driving_video_path = random.choice([
-            '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta1.pkl'
             '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta1.pkl',
-            '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta1.pkl',
+            '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta2.pkl',
+            '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta3.pkl',
         ])
     if driven_video_name in ['Dance monkey', 'Dance Monkey']:
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/d6.mp4'
@@ -41,14 +51,19 @@ def generate_video(image_file_path, driven_video_name):
     if driving_video_path is None:
         return None
 
-    dir_path = os.path.dirname(image_file_path)
-    file_basename = os.path.basename(image_file_path)
+    # print(driving_video_path)
+
     result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'live-portrait.sh'), image_file_path,
                              driving_video_path], capture_output=True, text=True)
 
-    print(result.stdout)
+    # print(result.stderr, result.stdout)
 
-    return {'video': ''}
+    output_dir_path = os.path.dirname(image_file_path)
+    output_file_name = os.path.join(output_dir_path, 'output', f'{basename(image_file_path)}--{basename(driving_video_path)}.mp4')
+
+    print(output_file_name)
+
+    return {'video': output_file_name}
 
 
 def processing(queue_item):
@@ -75,7 +90,7 @@ def processing(queue_item):
         return None
 
     print('---------------------')
-    print('Generating a video...')
+    print('Generating a video...', driven_video_name)
     result = generate_video(image_file_path, driven_video_name)
     file_path = result['video'] if result and 'video' in result else None
     if file_path and os.path.isfile(file_path):
