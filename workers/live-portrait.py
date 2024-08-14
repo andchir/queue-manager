@@ -1,7 +1,9 @@
 import os
 import sys
 import time
+import random
 import requests
+import subprocess
 from gradio_client import Client, file
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -24,20 +26,29 @@ def generate_video(image_file_path, driven_video_name):
 
     print(image_file_path, driven_video_name)
 
-    # client = Client('http://127.0.0.1:7860/')
-    # result = client.predict(
-    #     source_image=file(image_file_path),
-    #     preprocess='full',
-    #     still_mode=True,
-    #     use_enhancer=True,
-    #     batch_size=2,
-    #     size=256,
-    #     pose_style=0,
-    #     api_name='/test_1'
-    # )
-    # return result
+    driving_video_path = None
+    if driven_video_name in ['Живой портрет', 'Живой Портрет']:
+        driving_video_path = random.choice([
+            '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta1.pkl'
+            '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta1.pkl',
+            '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta1.pkl',
+        ])
+    if driven_video_name in ['Dance monkey', 'Dance Monkey']:
+        driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/d6.mp4'
+    if driven_video_name in ['Третье сентября', 'Третье Сентября']:
+        driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/shufutinsky.mp4'
 
-    return {}
+    if driving_video_path is None:
+        return None
+
+    dir_path = os.path.dirname(image_file_path)
+    file_basename = os.path.basename(image_file_path)
+    result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'live-portrait.sh'), image_file_path,
+                             driving_video_path], capture_output=True, text=True)
+
+    print(result.stdout)
+
+    return {'video': ''}
 
 
 def processing(queue_item):
@@ -66,7 +77,7 @@ def processing(queue_item):
     print('---------------------')
     print('Generating a video...')
     result = generate_video(image_file_path, driven_video_name)
-    file_path = result['video'] if 'video' in result else None
+    file_path = result['video'] if result and 'video' in result else None
     if file_path and os.path.isfile(file_path):
         print('Uploading a file to Google Drive...')
         shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='video')
