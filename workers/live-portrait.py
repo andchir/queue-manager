@@ -36,17 +36,16 @@ def basename(filename):
 
 
 def generate_video(image_file_path, driven_video_name):
-    driving_video_path = None
-    if driven_video_name in ['Живой портрет', 'Живой Портрет']:
+    if driven_video_name.lower() in ['dance monkey']:
+        driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/d6.mp4'
+    elif driven_video_name.lower() in ['третье сентября']:
+        driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/shufutinsky.mp4'
+    else:
         driving_video_path = random.choice([
             '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta1.pkl',
             '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta2.pkl',
             '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta3.pkl',
         ])
-    if driven_video_name in ['Dance monkey', 'Dance Monkey']:
-        driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/d6.mp4'
-    if driven_video_name in ['Третье сентября', 'Третье Сентября']:
-        driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/shufutinsky.mp4'
 
     if driving_video_path is None:
         return None
@@ -56,7 +55,7 @@ def generate_video(image_file_path, driven_video_name):
     result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'live-portrait.sh'), image_file_path,
                              driving_video_path], capture_output=True, text=True)
 
-    # print(result.stderr, result.stdout)
+    print(result.stderr, result.stdout)
 
     output_dir_path = os.path.dirname(image_file_path)
     output_file_name = os.path.join(output_dir_path, 'output', f'{basename(image_file_path)}--{basename(driving_video_path)}.mp4')
