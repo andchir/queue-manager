@@ -59,7 +59,7 @@ def processing(queue_item):
         # shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='image')
         print('Uploading a file to YaDisk...')
         file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
-        print('Done.', file_url, public_url)
+        print('Done.', public_url)
         print('Sending the result...')
         res = send_queue_result(queue_item['uuid'], file_url)
         print('Completed.')
