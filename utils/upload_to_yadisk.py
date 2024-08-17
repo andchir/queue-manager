@@ -11,6 +11,7 @@ client = yadisk.Client(token=settings.yadisk_token)
 def upload_and_share_file(file_path, dir_path, type='image'):
     with client:
         if not client.check_token():
+            # TODO: use refresh_token()
             print('YaDisk token is invalid.')
             return None, None
 
