@@ -39,7 +39,8 @@ def upload_and_share_file(file_path, dir_path, type='image'):
 
 if __name__ == '__main__':
     # file_path = '/media/andrew/KINGSTON/clip-art/wallpapers/animal-gea928f56a_1920.jpg'
-    file_path = '/media/andrew/KINGSTON/video/River - 131339.mp4'
+    # file_path = '/media/andrew/KINGSTON/video/River - 131339.mp4'
+    file_path = '/home/andrew/PycharmProjects/queue-manager/uploads/output/a2defc58-5c9a-11ef-b0a4-8106faee9292--shufutinsky.mp4'
     dir_path = 'api2app/media'
     file_url, public_url = upload_and_share_file(file_path, dir_path)
     print(file_url, public_url)

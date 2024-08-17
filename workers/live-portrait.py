@@ -7,10 +7,10 @@ import subprocess
 from gradio_client import Client, file
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.upload_to_yadisk import upload_and_share_file
 from config import settings
 from utils.queue_manager import send_queue_error, get_queue_next, send_queue_result
 from utils.upload_file import upload_from_url
-from utils.upload_to_gdrive import upload_and_share_file
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -93,11 +93,13 @@ def processing(queue_item):
     result = generate_video(image_file_path, driven_video_name)
     file_path = result['video'] if result and 'video' in result else None
     if file_path and os.path.isfile(file_path):
-        print('Uploading a file to Google Drive...')
-        shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='video')
-        print('Done.')
+        # print('Uploading a file to Google Drive...')
+        # shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='video')
+        print('Uploading a file to YaDisk...')
+        file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
+        print('Done.', public_url)
         print('Sending the result...')
-        res = send_queue_result(queue_item['uuid'], shared_file_link)
+        res = send_queue_result(queue_item['uuid'], public_url)
         print('Completed.')
     else:
         print(f'Output file not found. Send error message - Processing error.')
