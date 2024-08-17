@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     max_execution_time: int = 14400
     max_store_time: int = 43200
     gdrive_folder_id: str = ''
+    yadisk_token: str = ''
 
     class Config:
         env_file = '.env'
