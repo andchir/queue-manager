@@ -2,11 +2,9 @@ import os
 import subprocess
 import sys
 import time
-import requests
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import settings
-from utils.upload_to_gdrive import upload_and_share_file
+from utils.upload_to_yadisk import upload_and_share_file
 from utils.upload_file import upload_from_url
 from utils.queue_manager import get_queue_next, send_queue_error, send_queue_result
 
@@ -57,11 +55,13 @@ def processing(queue_item):
         file_basename.replace('.jpg', '.png').replace('.jpeg', '.png')
     )
     if file_path and os.path.isfile(file_path):
-        print('Uploading a file to Google Drive...')
-        shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='image')
-        print('Done.', shared_file_link)
+        # print('Uploading a file to Google Drive...')
+        # shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='image')
+        print('Uploading a file to YaDisk...')
+        file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
+        print('Done.', file_url, public_url)
         print('Sending the result...')
-        res = send_queue_result(queue_item['uuid'], shared_file_link)
+        res = send_queue_result(queue_item['uuid'], file_url)
         print('Completed.')
     else:
         print(f'Output file not found. Send error message - Processing error.')
