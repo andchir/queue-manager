@@ -42,7 +42,7 @@ def processing(queue_item):
     print('---------------------')
     print('Processing...')
 
-    image_file_path = image_resize(image_file_path, base_width=2000)
+    image_file_path = image_resize(image_file_path, base_width=3000)
 
     dir_path = os.path.dirname(image_file_path)
     file_basename = os.path.basename(image_file_path)
