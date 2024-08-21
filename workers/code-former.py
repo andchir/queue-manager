@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.upload_to_yadisk import upload_and_share_file
 from utils.upload_file import upload_from_url
 from utils.queue_manager import get_queue_next, send_queue_error, send_queue_result
+from utils.image_resize import image_resize
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -40,6 +41,8 @@ def processing(queue_item):
 
     print('---------------------')
     print('Processing...')
+
+    image_file_path = image_resize(image_file_path, base_width=2000)
 
     dir_path = os.path.dirname(image_file_path)
     file_basename = os.path.basename(image_file_path)
