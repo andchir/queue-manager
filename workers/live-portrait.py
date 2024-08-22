@@ -89,6 +89,9 @@ def processing(queue_item):
         return None
 
     print('---------------------')
+    if 'pending' in queue_item:
+        print('Pending:', queue_item['pending'])
+
     print('Generating a video...', driven_video_name)
     result = generate_video(image_file_path, driven_video_name)
     file_path = result['video'] if result and 'video' in result else None
