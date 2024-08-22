@@ -40,6 +40,8 @@ def processing(queue_item):
         return None
 
     print('---------------------')
+    if 'pending' in queue_item:
+        print('Pending:', queue_item['pending'])
     print('Processing...')
 
     image_file_path = image_resize(image_file_path, base_width=3000)
