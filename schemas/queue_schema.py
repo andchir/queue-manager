@@ -13,6 +13,7 @@ class QueueSchema(BaseModel):
     time_created: str | datetime | None = None
     time_updated: str | datetime | None = None
     number: int = 0
+    pending: int = 0
 
     class Config:
         from_attributes = True
