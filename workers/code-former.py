@@ -71,8 +71,8 @@ def processing(queue_item):
         res = send_queue_result(queue_item['uuid'], file_url)
         print('Completed.')
 
-        deleted_input = delete_old_files(dir_path)
-        deleted = delete_old_files(os.path.join(dir_path, 'output', 'final_results'))
+        deleted_input = delete_old_files(dir_path, max_hours=3)
+        deleted = delete_old_files(os.path.join(dir_path, 'output', 'final_results'), max_hours=3)
         print('Deleted old files: ', deleted + deleted_input)
 
     else:
