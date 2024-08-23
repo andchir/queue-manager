@@ -53,18 +53,14 @@ def processing(queue_item):
         return None
 
     dir_path = os.path.dirname(image_file_path)
-    file_basename = os.path.basename(image_file_path)
+    file_basename = str(os.path.basename(image_file_path))
     result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'code-former.sh'), image_file_path],
                             capture_output=True, text=True)
 
     print(result.stdout)
 
-    file_path = os.path.join(
-        dir_path,
-        'output',
-        'final_results',
-        file_basename.replace('.jpg', '.png').replace('.jpeg', '.png')
-    )
+    file_path = os.path.join(dir_path, 'output', 'final_results',
+                             file_basename.replace('.jpg', '.png').replace('.jpeg', '.png'))
     if file_path and os.path.isfile(file_path):
         # print('Uploading a file to Google Drive...')
         # shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='image')
