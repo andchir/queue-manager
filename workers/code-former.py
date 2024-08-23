@@ -5,7 +5,7 @@ import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.upload_to_yadisk import upload_and_share_file
-from utils.upload_file import upload_from_url
+from utils.upload_file import upload_from_url, delete_old_files
 from utils.queue_manager import get_queue_next, send_queue_error, send_queue_result
 from utils.image_resize import image_resize
 
@@ -70,6 +70,11 @@ def processing(queue_item):
         print('Sending the result...')
         res = send_queue_result(queue_item['uuid'], file_url)
         print('Completed.')
+
+        deleted_input = delete_old_files(dir_path)
+        deleted = delete_old_files(os.path.join(dir_path, 'output', 'final_results'))
+        print('Deleted old files: ', deleted + deleted_input)
+
     else:
         print(f'Output file not found. Send error message - Processing error.')
         send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
