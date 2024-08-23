@@ -44,7 +44,13 @@ def processing(queue_item):
         print('Pending:', queue_item['pending'])
     print('Processing...')
 
-    image_file_path = image_resize(image_file_path, base_width=3000)
+    try:
+        image_file_path = image_resize(image_file_path, base_width=3000)
+    except Exception as e:
+        print('ERROR:', str(e))
+        print('Send error message - Unable to determine file type.')
+        send_queue_error(queue_item['uuid'], 'Unable to determine file type.')
+        return None
 
     dir_path = os.path.dirname(image_file_path)
     file_basename = os.path.basename(image_file_path)
