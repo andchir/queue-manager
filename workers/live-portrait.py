@@ -102,7 +102,7 @@ def processing(queue_item):
         file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
         print('Done.', public_url)
         print('Sending the result...')
-        res = send_queue_result(queue_item['uuid'], public_url)
+        res = send_queue_result(queue_item['uuid'], file_url)
         print('Completed.')
     else:
         print(f'Output file not found. Send error message - Processing error.')
