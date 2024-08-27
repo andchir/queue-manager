@@ -249,7 +249,11 @@ async def set_queue_result_action(request: Request, queue_item: QueueResultSchem
 
     with session_maker() as session:
         queue_repository = QueueRepository(session)
-        res = queue_repository.find_by_uuid_and_status(uuid, [QueueStatus.PENDING.value, QueueStatus.PROCESSING.value])
+        res = queue_repository.find_by_uuid_and_status(uuid, [
+            QueueStatus.PENDING.value,
+            QueueStatus.PROCESSING.value,
+            QueueStatus.COMPLETED.value
+        ])
 
         result_data = queue_item.result_data if hasattr(queue_item, 'result_data') else None
         if result_data is None and payload is not None:
