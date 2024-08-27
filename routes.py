@@ -160,17 +160,16 @@ async def create_queue_action(
         task_repository = TasksRepository(session)
         task = task_repository.find_one_by_uuid(task_uuid)
 
-    if task is not None:
-        queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, **data)
-        with session_maker() as session:
+        if task is not None:
+            queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, **data)
             queue_repository = QueueRepository(session)
             queue_item = queue_repository.add_one(queue_item_new.model_dump())
-        return {
-            'success': True if queue_item is not None else False,
-            'uuid': queue_item.uuid if queue_item is not None else None,
-            'url': f'{base_url}/queue/{queue_item.uuid}'
-            if queue_item is not None else None
-        }
+            return {
+                'success': True if queue_item is not None else False,
+                'uuid': queue_item.uuid if queue_item is not None else None,
+                'url': f'{base_url}/queue/{queue_item.uuid}'
+                if queue_item is not None else None
+            }
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task with UUID {task_uuid} not found.')
 
 
@@ -180,7 +179,7 @@ async def create_queue_action(
 def get_queue_list_action() -> Union[ResponseQueueItems, dict]:
     with session_maker() as session:
         queue_repository = QueueRepository(session)
-        res = queue_repository.find_all()
+        res = queue_repository.find_all(limit=100)
 
     return {
         'items': res
@@ -193,14 +192,14 @@ def get_queue_action(uuid: str) -> Union[QueueSchema, dict]:
     with session_maker() as session:
         queue_repository = QueueRepository(session)
         queue_item = queue_repository.find_one_by_uuid(uuid)
-    if queue_item is not None:
-        with session_maker() as session:
+        if queue_item is not None:
             queue_repository = QueueRepository(session)
             queue_list = queue_repository.find_by_status(QueueStatus.PENDING.value, task_id=queue_item.task_id)
             queue_index = next((index for (index, d) in enumerate(list(queue_list)) if d[0].uuid == uuid), None)
-        result = queue_item.to_read_model()
-        result.number = queue_index + 1 if queue_index is not None else 0
-        return result
+
+            result = queue_item.to_read_model()
+            result.number = queue_index + 1 if queue_index is not None else 0
+            return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task not found.')
 
 
@@ -213,10 +212,9 @@ def get_queue_next_action(task_uuid: str, user_ip: str = Header(None, alias='X-R
         task_repository = TasksRepository(session)
         task = task_repository.find_one_by_uuid(task_uuid)
 
-    if task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task not found.')
+        if task is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task not found.')
 
-    with session_maker() as session:
         queue_repository = QueueRepository(session)
         res = queue_repository.find_one_next(task.id)
         if res is not None:
@@ -235,30 +233,40 @@ def get_queue_next_action(task_uuid: str, user_ip: str = Header(None, alias='X-R
 
 
 @router.post('/queue_result/{uuid}', name='Send Queue Item result', tags=['Queue'])
-def set_queue_result_action(queue_item: QueueResultSchema, uuid: str) -> Union[QueueSchema, dict]:
+async def set_queue_result_action(request: Request, queue_item: QueueResultSchema, uuid: str) -> Union[QueueSchema, dict]:
+
+    try:
+        payload = await request.json()
+    except Exception as e:
+        print(str(e))
+        payload = None
 
     restore_outdated_queue_items()
 
     with session_maker() as session:
         queue_repository = QueueRepository(session)
-        res = queue_repository.find_by_uuid_and_status(uuid, QueueStatus.PROCESSING.value)
-    if hasattr(queue_item, 'result_data') and res is not None:
-        result = queue_repository.update_one({
-            'status': QueueStatus.COMPLETED.value,
-            'result_data': queue_item.result_data,
-            'time_updated': datetime.datetime.utcnow()
-        }, res.id)
+        res = queue_repository.find_by_uuid_and_status(uuid, [QueueStatus.PENDING.value, QueueStatus.PROCESSING.value])
 
-        if result:
-            task_id = result.task_id
-            task_repository = TasksRepository(session)
-            with session_maker() as session:
+        result_data = queue_item.result_data if hasattr(queue_item, 'result_data') else None
+        if result_data is None and payload is not None:
+            result_data = payload
+
+        if res is not None:
+            result = queue_repository.update_one({
+                'status': QueueStatus.COMPLETED.value,
+                'result_data': result_data,
+                'time_updated': datetime.datetime.utcnow()
+            }, res.id)
+
+            if result:
+                task_id = result.task_id
+                task_repository = TasksRepository(session)
                 task = task_repository.find_one(task_id)
                 if task and task.webhook_url:
                     webhook_resp = webhook_post_result(task.webhook_url, uuid, result.status, result.result_data)
                     # print(webhook_resp)
 
-        return result
+            return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
 
 
@@ -266,18 +274,18 @@ def set_queue_result_action(queue_item: QueueResultSchema, uuid: str) -> Union[Q
 def set_queue_result_action(uuid: str, message: str = Form()) -> Union[QueueSchema, dict]:
     with session_maker() as session:
         queue_repository = QueueRepository(session)
-        res = queue_repository.find_by_uuid_and_status(uuid, QueueStatus.PROCESSING.value)
-    if res is not None:
-        result = queue_repository.update_one({
-            'status': QueueStatus.ERROR.value,
-            'result_data': {'message': message},
-            'time_updated': datetime.datetime.utcnow()
-        }, res.id)
+        res = queue_repository.find_by_uuid_and_status(uuid, [QueueStatus.PENDING.value, QueueStatus.PROCESSING.value])
 
-        if result:
-            task_id = result.task_id
-            task_repository = TasksRepository(session)
-            with session_maker() as session:
+        if res is not None:
+            result = queue_repository.update_one({
+                'status': QueueStatus.ERROR.value,
+                'result_data': {'message': message},
+                'time_updated': datetime.datetime.utcnow()
+            }, res.id)
+
+            if result:
+                task_id = result.task_id
+                task_repository = TasksRepository(session)
                 task = task_repository.find_one(task_id)
                 if task and task.webhook_url:
                     webhook_resp = webhook_post_result(task.webhook_url, uuid, result.status, result.result_data)

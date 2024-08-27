@@ -20,9 +20,9 @@ class QueueRepository(SQLAlchemyRepository):
             return None
         return result
 
-    def find_by_uuid_and_status(self, uuid, status):
+    def find_by_uuid_and_status(self, uuid, status_list):
         try:
-            obj = self.session.query(self.model).filter_by(uuid=uuid, status=status).one()
+            obj = self.session.query(self.model).filter(Queue.status.in_(status_list)).filter_by(uuid=uuid).one()
         except NoResultFound:
             return None
         return obj
