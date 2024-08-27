@@ -20,7 +20,9 @@ class SQLAlchemyRepository(AbstractRepository):
     def __init__(self, session: Session):
         self.session = session
 
-    def add_one(self, data: dict):
+    def add_one(self, data: dict, item_uuid=None):
+        if item_uuid is not None:
+            data['uuid'] = item_uuid
         if not self.session.in_transaction():
             self.session.begin()
         stmt = insert(self.model).values(**data).returning(self.model)

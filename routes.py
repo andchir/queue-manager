@@ -156,6 +156,10 @@ async def create_queue_action(
         if file_name:
             data['data']['audio_file'] = f'{base_url}/uploads/{file_name}'
 
+    item_uuid = None
+    if 'uid' in data['data'] or 'uuid' in data['data']:
+        item_uuid = data['data']['uid'] if 'uid' in data['data'] else data['data']['uuid']
+
     with session_maker() as session:
         task_repository = TasksRepository(session)
         task = task_repository.find_one_by_uuid(task_uuid)
@@ -163,7 +167,7 @@ async def create_queue_action(
         if task is not None:
             queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, **data)
             queue_repository = QueueRepository(session)
-            queue_item = queue_repository.add_one(queue_item_new.model_dump())
+            queue_item = queue_repository.add_one(queue_item_new.model_dump(), item_uuid=item_uuid)
             return {
                 'success': True if queue_item is not None else False,
                 'uuid': queue_item.uuid if queue_item is not None else None,
