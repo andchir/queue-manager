@@ -23,6 +23,8 @@ from utils.restore_outdated_queue_items import restore_outdated_queue_items
 from utils.security import check_authentication_header
 from utils.upload_file import upload_file, delete_old_files
 from utils.webhook import webhook_post_result
+from config import settings
+from web.client import ws_send_message
 
 router = APIRouter()
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -259,9 +261,12 @@ async def set_queue_result_action(request: Request, queue_item: QueueResultSchem
         if result_data is None and payload is not None:
             result_data = payload
 
+        result_status = QueueStatus.COMPLETED.value if 'code' not in result_data or result_data['code'] == 200 \
+            else QueueStatus.PROCESSING.value
+
         if res is not None:
             result = queue_repository.update_one({
-                'status': QueueStatus.COMPLETED.value,
+                'status': result_status,
                 'result_data': result_data,
                 'time_updated': datetime.datetime.utcnow()
             }, res.id)
@@ -273,6 +278,9 @@ async def set_queue_result_action(request: Request, queue_item: QueueResultSchem
                 if task and task.webhook_url:
                     webhook_resp = webhook_post_result(task.webhook_url, uuid, result.status, result.result_data)
                     # print(webhook_resp)
+                # send WebSocker message
+                if settings.ws_enabled == 'true':
+                    ws_send_message(result.uuid, json.dumps(result_data))
 
             return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
