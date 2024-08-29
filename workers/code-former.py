@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 import time
+import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.upload_to_yadisk import upload_and_share_file
@@ -78,6 +79,7 @@ def processing(queue_item):
     else:
         print(f'Output file not found. Send error message - Processing error.')
         send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
+    print(str(datetime.datetime.now()))
     print('---------------------')
     return queue_item
 
