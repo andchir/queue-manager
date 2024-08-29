@@ -7,7 +7,7 @@ import websockets
 
 
 async def send_message(recipient_uuid, message):
-    uri = 'wss://localhost:8765'
+    uri = 'ws://localhost:8765'
     async with websockets.connect(uri) as websocket:
         data = {'recipient_uuid': recipient_uuid, 'message': message}
 
