@@ -24,7 +24,7 @@ from utils.security import check_authentication_header
 from utils.upload_file import upload_file, delete_old_files
 from utils.webhook import webhook_post_result
 from config import settings
-from web.client import ws_send_message
+from web.client import send_message
 
 router = APIRouter()
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -280,7 +280,7 @@ async def set_queue_result_action(request: Request, queue_item: QueueResultSchem
                     # print(webhook_resp)
                 # send WebSocker message
                 if settings.ws_enabled == 'true':
-                    ws_send_message(result.uuid, json.dumps(result_data))
+                    await send_message(result.uuid, json.dumps(result_data))
 
             return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
