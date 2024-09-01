@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.upload_to_yadisk import upload_and_share_file
 from config import settings
 from utils.queue_manager import send_queue_error, get_queue_next, send_queue_result_dict
-from utils.upload_file import upload_from_url
+from utils.upload_file import upload_from_url, delete_old_files
 from utils.upload_to_vk import upload_to_vk
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -67,7 +67,7 @@ def generate_video(image_file_path, driven_video_name):
 
 
 def processing(queue_item):
-    upload_dir_path = os.path.join(ROOT_DIR, 'uploads')
+    upload_dir_path = os.path.join(ROOT_DIR, 'uploads', 'live-portrait')
     if not queue_item or 'data' not in queue_item:
         print(f'Send error message - Bad data.')
         send_queue_error(queue_item['uuid'], 'Processing error. Bad data.')
@@ -119,6 +119,10 @@ def processing(queue_item):
         print('Sending the result...')
         res = send_queue_result_dict(queue_item['uuid'], result_data)
         print('Completed.')
+
+        deleted_input = delete_old_files(upload_dir_path, max_hours=3)
+        print('Deleted old files: ', deleted_input)
+
     else:
         print(f'Output file not found. Send error message - Processing error.')
         send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
