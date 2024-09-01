@@ -9,8 +9,9 @@ from gradio_client import Client, file
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.upload_to_yadisk import upload_and_share_file
 from config import settings
-from utils.queue_manager import send_queue_error, get_queue_next, send_queue_result
+from utils.queue_manager import send_queue_error, get_queue_next, send_queue_result_dict
 from utils.upload_file import upload_from_url
+from utils.upload_to_vk import upload_to_vk
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -101,8 +102,22 @@ def processing(queue_item):
         print('Uploading a file to YaDisk...')
         file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
         print('Done.', public_url)
+
+        result_data = {'result': file_url}
+
+        if 'upload_url' in queue_item['data']:
+            print()
+            print('Uploading to VK...')
+            try:
+                vk_resp_data = upload_to_vk(file_path, queue_item['data']['upload_url'])
+                if vk_resp_data and 'file' in vk_resp_data:
+                    result_data['vk_file_to_save'] = vk_resp_data['file']
+                    print('Done.')
+            except Exception as e:
+                print('ERROR:', str(e))
+
         print('Sending the result...')
-        res = send_queue_result(queue_item['uuid'], file_url)
+        res = send_queue_result_dict(queue_item['uuid'], result_data)
         print('Completed.')
     else:
         print(f'Output file not found. Send error message - Processing error.')
