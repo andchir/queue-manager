@@ -62,7 +62,10 @@ if __name__ == '__main__':
     # file_url, public_url = upload_and_share_file(file_path, dir_path)
     # print(file_url, public_url)
     args = sys.argv[1:]
-    offset = int(args[0]) if len(args) > 0 else 0
-    limit = int(args[1]) if len(args) > 1 else 100
-    delete_old_files_yadisk(dir_path, offset=offset, limit=limit)
+    action = args[0] if len(args) > 0 else ''
+    offset = int(args[1]) if len(args) > 1 else 0
+    limit = int(args[2]) if len(args) > 2 else 100
+    print(action, offset, limit)
+    if action == 'delete_old_files':
+        delete_old_files_yadisk(dir_path, offset=offset, limit=limit)
 
