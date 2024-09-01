@@ -20,6 +20,15 @@ def send_queue_result(queue_uuid, result_str, key='result'):
     return r.json()
 
 
+def send_queue_result_dict(queue_uuid, result_dict):
+    queue_url = 'https://queue.api2app.ru/queue_result/{}'.format(queue_uuid)
+    payload = {
+        'result_data': result_dict
+    }
+    r = requests.post(url=queue_url, json=payload)
+    return r.json()
+
+
 def send_queue_error(queue_uuid, message):
     queue_url = 'https://queue.api2app.ru/queue_error/{}'.format(queue_uuid)
     payload = {'message': message}
