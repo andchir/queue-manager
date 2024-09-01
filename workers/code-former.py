@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.upload_to_yadisk import upload_and_share_file
 from utils.upload_file import upload_from_url, delete_old_files
 from utils.queue_manager import get_queue_next, send_queue_error, send_queue_result, send_queue_result_dict
-from utils.image_resize import image_resize
+from utils.image_resize import image_resize, convert_to_jpg
 from utils.upload_to_vk import upload_to_vk
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -66,6 +66,10 @@ def processing(queue_item):
     if file_path and os.path.isfile(file_path):
         # print('Uploading a file to Google Drive...')
         # shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='image')
+
+        print('Converting to JPG...')
+        file_path = convert_to_jpg(file_path)
+
         print('Uploading a file to YaDisk...')
         file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
         print('Done.', public_url)
