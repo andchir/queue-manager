@@ -88,6 +88,7 @@ def processing(queue_item):
 
         print('Sending the result...')
         res = send_queue_result_dict(queue_item['uuid'], result_data)
+        print()
         print('Completed.')
 
         deleted_input = delete_old_files(dir_path, max_hours=3)
