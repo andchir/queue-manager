@@ -72,11 +72,13 @@ def processing(queue_item):
 
         result_data = {'result': file_url}
         if 'upload_url' in queue_item['data']:
+            print()
             print('Uploading to VK...')
             try:
                 vk_resp_data = upload_to_vk(file_path, queue_item['data']['upload_url'])
                 if vk_resp_data and 'file' in vk_resp_data:
                     result_data['vk_file_to_save'] = vk_resp_data['file']
+                    print('Done.')
             except Exception as e:
                 print('ERROR:', str(e))
 
