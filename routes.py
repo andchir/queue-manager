@@ -182,10 +182,14 @@ async def create_queue_action(
 @router.get('/queue', name='Queue list', tags=['Queue'],
             dependencies=[Depends(check_authentication_header)],
             response_model=ResponseQueueItems)
-def get_queue_list_action() -> Union[ResponseQueueItems, dict]:
+def get_queue_list_action(task_id: int = None, task_uuid: str = None) -> Union[ResponseQueueItems, dict]:
     with session_maker() as session:
+        if task_uuid is not None:
+            task_repository = TasksRepository(session)
+            task = task_repository.find_one_by_uuid(task_uuid)
+            task_id = task.id
         queue_repository = QueueRepository(session)
-        res = queue_repository.find_all(limit=100)
+        res = queue_repository.find_all(limit=100, filter={'task_id': task_id} if task_id else None)
 
     return {
         'items': res
