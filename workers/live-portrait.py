@@ -4,6 +4,7 @@ import time
 import random
 import requests
 import subprocess
+import datetime
 from gradio_client import Client, file
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -118,6 +119,7 @@ def processing(queue_item):
 
         print('Sending the result...')
         res = send_queue_result_dict(queue_item['uuid'], result_data)
+        print()
         print('Completed.')
 
         deleted_input = delete_old_files(upload_dir_path, max_hours=3)
@@ -126,6 +128,7 @@ def processing(queue_item):
     else:
         print(f'Output file not found. Send error message - Processing error.')
         send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
+    print(str(datetime.datetime.now()))
     print('---------------------')
 
 
