@@ -8,7 +8,7 @@ DIR_PATH="$(dirname "$1")"
 echo "DIR_PATH: ${DIR_PATH}"
 echo "BASE_NAME: ${BASE_NAME}"
 
-python "/home/andrew/PycharmProjects/CodeFormer/inference_codeformer.py" \
+python "/home/andrew/python_projects/CodeFormer/inference_codeformer.py" \
 --input_path "$1" \
 --upscale 2 \
 --fidelity_weight 0.9 \
