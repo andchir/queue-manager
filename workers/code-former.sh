@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source "/home/andrew/PycharmProjects/CodeFormer/venv/bin/activate"
+source "/home/andrew/python_projects/CodeFormer/venv/bin/activate"
 
 BASE_NAME=""$(basename $1)""
 DIR_PATH="$(dirname "$1")"
