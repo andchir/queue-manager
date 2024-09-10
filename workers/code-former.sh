@@ -11,7 +11,7 @@ echo "BASE_NAME: ${BASE_NAME}"
 python "/home/andrew/python_projects/CodeFormer/inference_codeformer.py" \
 --input_path "$1" \
 --upscale 2 \
---fidelity_weight 0.2 \
+--fidelity_weight 0.4 \
 --bg_upsampler realesrgan \
 --face_upsample \
 --bg_upsampler realesrgan \
