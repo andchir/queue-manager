@@ -37,7 +37,7 @@ def basename(filename):
     return prefix(os.path.basename(filename))
 
 
-def generate_video(image_file_path, driven_video_name):
+def generate_video(image_file_path, driven_video_name=None):
     if driven_video_name.lower() in ['dance monkey']:
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/d6.mp4'
     elif driven_video_name.lower() in ['третье сентября']:
@@ -74,7 +74,7 @@ def processing(queue_item):
         send_queue_error(queue_item['uuid'], 'Processing error. Bad data.')
         return queue_item
     image_file_path = None
-    driven_video_name = queue_item['data']['input'] if 'input' in queue_item['data'] else 'default'
+    driven_video_name = queue_item['data']['input'] if 'input' in queue_item['data'] and queue_item['data']['input'] else 'default'
 
     if 'image_file' in queue_item['data']:
         image_url = queue_item['data']['image_file']
