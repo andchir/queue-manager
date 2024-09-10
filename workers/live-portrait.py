@@ -106,7 +106,7 @@ def processing(queue_item):
 
         result_data = {'result': file_url}
 
-        if 'upload_url' in queue_item['data']:
+        if 'upload_url' in queue_item['data'] and queue_item['data']['upload_url'].find('https://pu.vk.com/') == 0:
             print()
             print('Uploading to VK...')
             try:
