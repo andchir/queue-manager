@@ -1,7 +1,7 @@
 from PIL import Image, ImageOps
 
 
-def image_resize(image_path, base_width=2000):
+def image_resize(image_path, base_width=2000, up_scale=False):
     img = Image.open(image_path)
     ext = image_path.split('.')[-1]
     if ext not in ['jpg', 'jpeg', 'png']:
@@ -10,7 +10,7 @@ def image_resize(image_path, base_width=2000):
     img = ImageOps.exif_transpose(img)
 
     width, height = img.size
-    if width <= base_width:
+    if width <= base_width and not up_scale:
         return image_path
     output_path = image_path.replace('.' + ext, '_resized.' + ext)
     w_percent = (base_width / float(width))

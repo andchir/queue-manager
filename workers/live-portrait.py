@@ -13,6 +13,7 @@ from config import settings
 from utils.queue_manager import send_queue_error, get_queue_next, send_queue_result_dict
 from utils.upload_file import upload_from_url, delete_old_files
 from utils.upload_to_vk import upload_to_vk
+from utils.image_resize import image_resize
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -95,6 +96,15 @@ def processing(queue_item):
         print('Pending:', queue_item['pending'])
 
     print('Generating a video...', driven_video_name)
+
+    try:
+        image_file_path = image_resize(image_file_path, base_width=800, up_scale=True)
+    except Exception as e:
+        print('ERROR:', str(e))
+        print('Send error message - Unable to determine file type.')
+        send_queue_error(queue_item['uuid'], 'Unable to determine file type.')
+        return None
+
     result = generate_video(image_file_path, driven_video_name)
     file_path = result['video'] if result and 'video' in result else None
     if file_path and os.path.isfile(file_path):
@@ -104,7 +114,7 @@ def processing(queue_item):
         file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
         print('Done.', public_url)
 
-        result_data = {'result': file_url}
+        result_data = {'result': file_url, 'public_url': public_url}
 
         if 'upload_url' in queue_item['data'] and queue_item['data']['upload_url'].find('https://pu.vk.com/') == 0:
             print()
