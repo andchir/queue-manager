@@ -112,6 +112,7 @@ async def create_queue_action(
         task_uuid: str,
         data: str = Form(None),
         image_file: UploadFile = None,
+        image_file2: UploadFile = None,
         video_file: UploadFile = None,
         audio_file: UploadFile = None
 ) -> Union[ResponseItemUuid, dict]:
@@ -147,6 +148,11 @@ async def create_queue_action(
         file_name = upload_file(image_file, upload_dir_path, type='image')
         if file_name:
             data['data']['image_file'] = f'{base_url}/uploads/{file_name}'
+
+    if image_file2 is not None:
+        file_name = upload_file(image_file2, upload_dir_path, type='image')
+        if file_name:
+            data['data']['image_file2'] = f'{base_url}/uploads/{file_name}'
 
     if video_file is not None:
         file_name = upload_file(video_file, upload_dir_path, type='video')
