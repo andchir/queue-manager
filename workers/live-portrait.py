@@ -132,8 +132,9 @@ def processing(queue_item):
         print()
         print('Completed.')
 
-        deleted_input = delete_old_files(upload_dir_path, max_hours=3)
-        print('Deleted old files: ', deleted_input)
+        deleted_input = delete_old_files(upload_dir_path, max_hours=2)
+        deleted = delete_old_files(os.path.join(upload_dir_path, 'output'), max_hours=2)
+        print('Deleted old files: ', deleted + deleted_input)
 
     else:
         print(f'Output file not found. Send error message - Processing error.')
