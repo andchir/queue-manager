@@ -141,12 +141,14 @@ def processing(queue_item):
         send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
     print(str(datetime.datetime.now()))
     print('---------------------')
+    print('Wait 2 seconds...')
+    time.sleep(2)
 
 
 if __name__ == '__main__':
     show_message = True
     while True:
-        queue_item = get_queue_next('304a0d98-216b-45d2-bf63-56811e49ab6b')
+        queue_item = get_queue_next('fe10d225-fbae-47b8-9e13-9beb9c1890b8')
         if queue_item is not None:
             processing(queue_item)
             show_message = True
