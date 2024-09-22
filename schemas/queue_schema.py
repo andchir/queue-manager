@@ -56,3 +56,11 @@ class QueueResultSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class QueueSizeSchema(BaseModel):
+    queue_size: int = 0
+
+    class Config:
+        from_attributes = True
+

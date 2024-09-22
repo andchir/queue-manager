@@ -15,7 +15,7 @@ from repositories.proxy_repository import ProxyRepository
 from repositories.queue_repository import QueueRepository
 from repositories.tasks_repository import TasksRepository
 from schemas.proxy_schema import ProxySchema, ProxyAddSchema
-from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema, QueueSchema, QueueResultSchema
+from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema, QueueSchema, QueueResultSchema, QueueSizeSchema
 from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId, ResponseQueueItems, \
     ResponseItemUuid, ResponseProxyItems
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
@@ -217,6 +217,22 @@ def get_queue_action(uuid: str) -> Union[QueueSchema, dict]:
             result.number = queue_index + 1 if queue_index is not None else 0
             return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task not found.')
+
+
+@router.get('/queue_size/{task_uuid}', name='Get Queue Size', tags=['Queue'])
+def get_queue_size_action(task_uuid: str) -> Union[QueueSizeSchema, dict]:
+    queue_size = 0
+    with session_maker() as session:
+        task_repository = TasksRepository(session)
+        task = task_repository.find_one_by_uuid(task_uuid)
+
+        if task is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task not found.')
+
+        queue_repository = QueueRepository(session)
+        queue_size = queue_repository.get_count_by_task_id(QueueStatus.PENDING.value, task_id=task.id)
+
+    return {'queue_size': queue_size}
 
 
 @router.get('/queue_next/{task_uuid}', name='Get Next Queue Item', tags=['Queue'])

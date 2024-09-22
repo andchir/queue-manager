@@ -1,5 +1,5 @@
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy import select
+from sqlalchemy import select, func
 from models.queue import Queue
 from utils.repository import SQLAlchemyRepository
 
@@ -16,6 +16,16 @@ class QueueRepository(SQLAlchemyRepository):
                     .where(*((self.model.status == status,) if task_id is None else (self.model.task_id == task_id, self.model.status == status)))
                     .order_by(self.model.id))
             result = self.session.execute(stmt)
+        except NoResultFound:
+            return None
+        return result
+
+    def get_count_by_task_id(self, status, task_id):
+        try:
+            stmt = (select(func.count())
+                    .where(self.model.task_id == task_id, self.model.status == status)
+                    .order_by(self.model.id))
+            result = self.session.execute(stmt).scalar()
         except NoResultFound:
             return None
         return result
