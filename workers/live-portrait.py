@@ -95,6 +95,7 @@ def processing(queue_item):
     if 'pending' in queue_item:
         print('Pending:', queue_item['pending'])
 
+    print('UUID: ', queue_item['uuid'])
     print('Generating a video...', driven_video_name)
 
     try:
