@@ -43,6 +43,10 @@ def generate_video(image_file_path, driven_video_name=None):
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/d6.mp4'
     elif driven_video_name.lower() in ['третье сентября']:
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/shufutinsky.mp4'
+    elif driven_video_name.lower() in ['веселье', 'fun']:
+        driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/emotions.pkl'
+    elif driven_video_name.lower() in ['masha is fine - уиллем дефо']:
+        driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/willem-dafoe-masha-is-fine-25.mp4'
     else:
         driving_video_path = random.choice([
             '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta1.pkl',
