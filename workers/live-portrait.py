@@ -118,10 +118,13 @@ def processing(queue_item):
         # print('Uploading a file to Google Drive...')
         # shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='video')
         print('Uploading a file to YaDisk...')
-        file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
-        print('Done.', public_url)
-
-        result_data = {'result': file_url, 'public_url': public_url}
+        try:
+            file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
+            print('Done.', public_url)
+            result_data = {'result': file_url, 'public_url': public_url}
+        except Exception as e:
+            print('ERROR:', str(e))
+            result_data = {}
 
         if 'upload_url' in queue_item['data'] and queue_item['data']['upload_url'].find('https://pu.vk.com/') == 0:
             print()
