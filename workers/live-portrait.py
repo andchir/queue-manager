@@ -41,11 +41,11 @@ def basename(filename):
 def generate_video(image_file_path, driven_video_name=None):
     if driven_video_name.lower() in ['dance monkey']:
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/d6.mp4'
-    elif driven_video_name.lower() in ['третье сентября']:
+    elif driven_video_name.lower() in ['третье сентября', 'september 3rd']:
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/shufutinsky.mp4'
-    elif driven_video_name.lower() in ['веселье', 'поцелуи', 'kisses']:
+    elif driven_video_name.lower() in ['веселье', 'поцелуи', 'kissing']:
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/kisses.pkl'
-    elif driven_video_name.lower() in ['masha is fine - уиллем дефо']:
+    elif driven_video_name.lower() in ['masha is fine - уиллем дефо', 'masha is fine - willem dafoe']:
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/willem-dafoe-masha-is-fine-25.mp4'
     elif driven_video_name.lower() in ['испанец-хохотун', 'laughing spaniard']:
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/ispanets.mp4'
