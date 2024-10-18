@@ -29,6 +29,9 @@ async def register(websocket):
                 print('Message', event)
                 if recipient_uuid is not None and recipient_uuid in CONNECTIONS:
                     await CONNECTIONS[recipient_uuid].send(message)
+                else:
+                    print(recipient_uuid, 'Connection not found.')
+                    print()
     finally:
         print('Disconnected', tmp_uuid)
         if 'tmp_' + tmp_uuid in CONNECTIONS:
