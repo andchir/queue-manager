@@ -63,7 +63,7 @@ def processing(queue_item):
     if 'audio_file' in queue_item['data']:
         audio_url = queue_item['data']['audio_file']
         try:
-            audio_file_path = upload_from_url(upload_dir_path, audio_url)
+            audio_file_path = upload_from_url(upload_dir_path, audio_url, type='audio')
             audio_file_path = cut_audio_duration(audio_file_path, MAX_AUDIO_LENGTH)
         except Exception as e:
             print(f'Error', str(e))
@@ -74,6 +74,8 @@ def processing(queue_item):
             image_file_path = upload_from_url(upload_dir_path, image_url)
         except Exception as e:
             print(f'Error', str(e))
+
+    print(audio_file_path, image_file_path)
 
     if (not image_file_path or not os.path.isfile(image_file_path)
             or not audio_file_path or not os.path.isfile(audio_file_path)):
@@ -134,7 +136,7 @@ def processing(queue_item):
 if __name__ == '__main__':
     show_message = True
     while True:
-        queue_item = get_queue_next('fe10d225-fbae-47b8-9e13-9beb9c1890b8')
+        queue_item = get_queue_next('068a33f4-9b1f-4fe2-8263-85395edf32cf')
         if queue_item is not None:
             processing(queue_item)
             show_message = True
