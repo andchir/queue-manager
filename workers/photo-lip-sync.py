@@ -75,8 +75,6 @@ def processing(queue_item):
         except Exception as e:
             print(f'Error', str(e))
 
-    print(audio_file_path, image_file_path)
-
     if (not image_file_path or not os.path.isfile(image_file_path)
             or not audio_file_path or not os.path.isfile(audio_file_path)):
         print('Send error message - File not found.')
