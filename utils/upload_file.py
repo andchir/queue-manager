@@ -9,19 +9,6 @@ import filetype
 from pydub import AudioSegment
 
 
-def cut_audio_duration(file_path, max_dur=60):
-    format = file_path[-3:].lower()
-    audio = AudioSegment.from_file(file_path, format=format)
-    if audio.duration_seconds <= max_dur:
-        return file_path
-    file_path_out = file_path[0:-4] + '_' + str(max_dur) + 'sec.' + format
-    if os.path.isfile(file_path_out):
-        return file_path_out
-    audio_out = audio[:max_dur * 1000]
-    audio_out.export(file_path_out, format=format)
-    return file_path_out
-
-
 def upload_file(file: UploadFile, dir_path: str, type='image'):
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path)

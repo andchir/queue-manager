@@ -4,9 +4,8 @@ import sys
 import time
 from gradio_client import Client, file
 from utils.queue_manager import get_queue_next, send_queue_error, send_queue_result
-from utils.upload_file import upload_from_url, cut_audio_duration
-from utils.upload_to_gdrive import upload_and_share_file
-from config import settings
+from utils.upload_file import upload_from_url
+from utils.video_audio import cut_audio_duration
 
 # https://github.com/BadToBest/EchoMimic
 # Start API:

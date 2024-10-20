@@ -7,8 +7,9 @@ import uuid
 from gradio_client import Client, file
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.upload_file import upload_from_url, cut_audio_duration
+from utils.upload_file import upload_from_url
 from utils.upload_to_gdrive import upload_and_share_file
+from utils.video_audio import cut_audio_duration
 from config import settings
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

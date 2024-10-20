@@ -11,8 +11,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.upload_to_yadisk import upload_and_share_file
 from config import settings
 from utils.queue_manager import send_queue_error, get_queue_next, send_queue_result_dict
-from utils.upload_file import upload_from_url, delete_old_files, cut_audio_duration
-from utils.upload_to_vk import upload_to_vk
+from utils.upload_file import upload_from_url, delete_old_files
+from utils.video_audio import cut_audio_duration, get_audio_duration
 from utils.image_resize import image_resize
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,7 +39,7 @@ def basename(filename):
     return prefix(os.path.basename(filename))
 
 
-def generate_video_from_photo(image_file_path):
+def generate_video_from_photo(image_file_path, duration=None):
     driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/face_speaking.pkl'
 
     result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'live-portrait.sh'), image_file_path,
@@ -97,12 +97,14 @@ def processing(queue_item):
         return None
 
     print('Step 1: Generating a video from photo...')
-    out_video_file_path = generate_video_from_photo(image_file_path)
+    audio_duration = get_audio_duration(audio_file_path)
+    out_video_file_path = generate_video_from_photo(image_file_path, duration=audio_duration)
     if not out_video_file_path or not os.path.isfile(out_video_file_path):
         print(f'Output file not found. Send error message - Processing error.')
         send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
 
     print('Step 1 - Done.')
+    print('Step 2: Generate lips-sync video...')
 
     if out_video_file_path and os.path.isfile(out_video_file_path):
         # print('Uploading a file to Google Drive...')
