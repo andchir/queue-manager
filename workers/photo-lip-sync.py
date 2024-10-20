@@ -12,7 +12,7 @@ from utils.upload_to_yadisk import upload_and_share_file
 from config import settings
 from utils.queue_manager import send_queue_error, get_queue_next, send_queue_result_dict
 from utils.upload_file import upload_from_url, delete_old_files
-from utils.video_audio import cut_audio_duration, get_audio_duration
+from utils.video_audio import cut_audio_duration, get_audio_duration, video_create_duration
 from utils.image_resize import image_resize
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -104,7 +104,11 @@ def processing(queue_item):
         send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
 
     print('Step 1 - Done.')
+    print()
     print('Step 2: Generate lips-sync video...')
+    print()
+    print('Preparing the video...')
+    out_video_file_path = video_create_duration(out_video_file_path, audio_duration)
 
     if out_video_file_path and os.path.isfile(out_video_file_path):
         # print('Uploading a file to Google Drive...')
