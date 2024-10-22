@@ -56,7 +56,7 @@ def generate_video_from_photo(image_file_path, duration=None):
 
 def generate_lipsync_video(target_video, audio_file_path, uuid):
     dir_path = os.path.dirname(target_video)
-    output_path = os.path.join(dir_path, 'output', 'output_' + uuid + '.mp4')
+    output_path = os.path.join(dir_path, 'output_' + uuid + '.mp4')
 
     result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'photo-lip-sync.sh'), target_video,
                              audio_file_path, uuid], capture_output=True, text=True)
