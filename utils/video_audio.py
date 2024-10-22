@@ -23,7 +23,7 @@ def get_audio_duration(file_path):
     return audio.duration_seconds
 
 
-def video_create_duration(file_path, target_duration):
+def video_create_duration(file_path, target_duration, start_time=0):
     try:
         probe = ffmpeg.probe(file_path)
     except ffmpeg.Error as e:
@@ -42,10 +42,10 @@ def video_create_duration(file_path, target_duration):
     if video_duration >= target_duration:
         (
             ffmpeg
-            .input(file_path, to=target_duration)
+            .input(file_path, ss=start_time, to=start_time + target_duration)
             .output(file_path_out, vcodec='copy', acodec='copy')
             .overwrite_output()
-            .run()
+            .run(capture_stdout=True, capture_stderr=True)
             # .compile()
         )
 
@@ -80,5 +80,5 @@ def video_create_duration(file_path, target_duration):
 
 if __name__ == '__main__':
     # output = cut_audio_duration('/media/andrew/KINGSTON/music/mickey mouse song.mp3', 20)
-    output = video_create_duration('/media/andrew/KINGSTON/video/willem-dafoe-masha-is-fine.mp4', 20)
+    output = video_create_duration('/home/andrew/python_projects/LivePortrait/assets/examples/driving/face_speaking.mp4', 60)
     print(output)

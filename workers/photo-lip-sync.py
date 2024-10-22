@@ -40,7 +40,10 @@ def basename(filename):
 
 
 def generate_video_from_photo(image_file_path, duration=None):
-    driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/face_speaking.pkl'
+    if duration is not None and duration <= 30:
+        driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/face_speaking_30sec.pkl'
+    else:
+        driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/face_speaking.pkl'
 
     result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'live-portrait.sh'), image_file_path,
                              driving_video_path], capture_output=True, text=True)
@@ -49,6 +52,16 @@ def generate_video_from_photo(image_file_path, duration=None):
     output_file_name = os.path.join(output_dir_path, 'output', f'{basename(image_file_path)}--{basename(driving_video_path)}.mp4')
 
     return output_file_name
+
+
+def generate_lipsync_video(target_video, audio_file_path, uuid):
+    dir_path = os.path.dirname(target_video)
+    output_path = os.path.join(dir_path, 'output', uuid + '.mp4')
+
+    result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'photo-lip-sync.sh'), target_video,
+                             audio_file_path, uuid], capture_output=True, text=True)
+
+    return output_path
 
 
 def processing(queue_item):
@@ -105,10 +118,14 @@ def processing(queue_item):
 
     print('Step 1 - Done.')
     print()
-    print('Step 2: Generate lips-sync video...')
+    print('Step 2.')
     print()
     print('Preparing the video...')
-    out_video_file_path = video_create_duration(out_video_file_path, audio_duration)
+    out_video_file_path = video_create_duration(out_video_file_path, target_duration=int(audio_duration))
+
+    print('Generate lips-sync video...')
+    out_video_file_path = generate_lipsync_video(out_video_file_path, audio_file_path, queue_item['uuid'])
+    print(out_video_file_path, os.path.isfile(out_video_file_path))
 
     if out_video_file_path and os.path.isfile(out_video_file_path):
         # print('Uploading a file to Google Drive...')
