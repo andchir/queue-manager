@@ -125,7 +125,6 @@ def processing(queue_item):
 
     print('Generate lips-sync video...')
     out_video_file_path = generate_lipsync_video(out_video_file_path, audio_file_path, queue_item['uuid'])
-    print(out_video_file_path, os.path.isfile(out_video_file_path))
 
     if out_video_file_path and os.path.isfile(out_video_file_path):
         # print('Uploading a file to Google Drive...')
