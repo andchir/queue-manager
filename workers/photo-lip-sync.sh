@@ -31,7 +31,7 @@ python facefusion.py job-add-step lipsync-"$UUID" \
 --output-video-fps 25 \
 --lip-syncer-model 'wav2lip_gan_96' \
 --face-enhancer-model 'gfpgan_1.3' \
---face-enhancer-blend 80 \
+--face-enhancer-blend 100 \
 --processors {'lip_syncer','face_enhancer'}
 
 python facefusion.py job-submit lipsync-"$UUID"
