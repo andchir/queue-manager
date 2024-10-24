@@ -143,9 +143,9 @@ def processing(queue_item):
         print()
         print('Completed.')
 
-        deleted_input = delete_old_files(upload_dir_path, max_hours=2)
-        deleted = delete_old_files(os.path.join(upload_dir_path, 'output'), max_hours=2)
-        print('Deleted old files: ', deleted + deleted_input)
+        # deleted_input = delete_old_files(upload_dir_path, max_hours=2)
+        # deleted = delete_old_files(os.path.join(upload_dir_path, 'output'), max_hours=2)
+        # print('Deleted old files: ', deleted + deleted_input)
 
     print(str(datetime.datetime.now()))
     print('---------------------')

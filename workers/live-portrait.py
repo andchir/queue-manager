@@ -49,6 +49,8 @@ def generate_video(image_file_path, driven_video_name=None):
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/willem-dafoe-masha-is-fine-25.mp4'
     elif driven_video_name.lower() in ['опера', 'opera']:
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/opera-pavarotti.mp4'
+    elif driven_video_name.lower() in ['опера женский голос', 'opera_female']:
+        driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/opera_female.mp4'
     else:
         driving_video_path = random.choice([
             '/home/andrew/python_projects/LivePortrait/assets/examples/driving/marta1.pkl',
