@@ -73,8 +73,11 @@ def processing(queue_item):
     image_file_path = None
     audio_file_path = None
 
-    if 'audio_file' in queue_item['data']:
-        audio_url = queue_item['data']['audio_file']
+    print(queue_item['data'])
+
+    if 'audio_file' in queue_item['data'] or 'audio_url' in queue_item['data']:
+        audio_url = queue_item['data']['audio_file']\
+            if 'audio_file' in queue_item['data'] else queue_item['data']['audio_url']
         try:
             audio_file_path = upload_from_url(upload_dir_path, audio_url, type='audio')
             audio_file_path = cut_audio_duration(audio_file_path, MAX_AUDIO_LENGTH)
