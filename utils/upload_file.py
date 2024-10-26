@@ -62,7 +62,7 @@ def validate_file_size(real_file_size, type='image'):
 def validate_file_size_type(file: UploadFile = None, file_path=None, type='image'):
     IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'png', 'jpeg', 'jpg']
     VIDEO_TYPES = ['video/mp4', 'video/webm', 'mp4', 'webm']
-    AUDIO_TYPES = ['audio/mp3', 'audio/mpeg', 'audio/wav', 'mp3', 'wav']
+    AUDIO_TYPES = ['audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'mp3', 'wav']
 
     if file is None and file_path is None:
         raise HTTPException(
