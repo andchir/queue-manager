@@ -123,7 +123,7 @@ def processing(queue_item):
 
     print('Step 1: Generating a video from photo...')
     audio_duration = get_audio_duration(audio_file_path)
-    print('Duration:', audio_duration)
+    print('Duration:', int(audio_duration))
     if video_file_path:
         out_video_file_path = video_file_path
         print('Skipped')
