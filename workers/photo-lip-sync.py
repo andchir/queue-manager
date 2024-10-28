@@ -72,8 +72,17 @@ def processing(queue_item):
         return queue_item
     image_file_path = None
     audio_file_path = None
+    video_file_path = None
 
-    print(queue_item['data'])
+    print('UUID: ', queue_item['uuid'])
+    # print(queue_item['data'])
+
+    if 'video_file' in queue_item['data']:
+        video_url = queue_item['data']['video_file']
+        try:
+            video_file_path = upload_from_url(upload_dir_path, video_url, type='video')
+        except Exception as e:
+            print(f'Error', str(e))
 
     if 'audio_file' in queue_item['data'] or 'audio_url' in queue_item['data']:
         audio_url = queue_item['data']['audio_file']\
@@ -91,8 +100,9 @@ def processing(queue_item):
         except Exception as e:
             print(f'Error', str(e))
 
-    if (not image_file_path or not os.path.isfile(image_file_path)
-            or not audio_file_path or not os.path.isfile(audio_file_path)):
+    if (not audio_file_path or not os.path.isfile(audio_file_path)
+            or ((not image_file_path or not os.path.isfile(image_file_path))
+            and (not video_file_path or not os.path.isfile(video_file_path)))):
         print('Send error message - File not found.')
         send_queue_error(queue_item['uuid'], 'File not found.')
         return None
@@ -101,23 +111,26 @@ def processing(queue_item):
     if 'pending' in queue_item:
         print('Pending:', queue_item['pending'])
 
-    print('UUID: ', queue_item['uuid'])
-    print('Resize image...')
-
-    try:
-        image_file_path = image_resize(image_file_path, base_width=800, up_scale=True)
-    except Exception as e:
-        print('ERROR:', str(e))
-        print('Send error message - Unable to determine file type.')
-        send_queue_error(queue_item['uuid'], 'Unable to determine file type.')
-        return None
+    if image_file_path:
+        print('Resize image...')
+        try:
+            image_file_path = image_resize(image_file_path, base_width=800, up_scale=True)
+        except Exception as e:
+            print('ERROR:', str(e))
+            print('Send error message - Unable to determine file type.')
+            send_queue_error(queue_item['uuid'], 'Unable to determine file type.')
+            return None
 
     print('Step 1: Generating a video from photo...')
     audio_duration = get_audio_duration(audio_file_path)
-    out_video_file_path = generate_video_from_photo(image_file_path, duration=audio_duration)
-    if not out_video_file_path or not os.path.isfile(out_video_file_path):
-        print(f'Output file not found. Send error message - Processing error.')
-        send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
+    if video_file_path:
+        out_video_file_path = video_file_path
+        print('Skipped')
+    else:
+        out_video_file_path = generate_video_from_photo(image_file_path, duration=audio_duration)
+        if not out_video_file_path or not os.path.isfile(out_video_file_path):
+            print(f'Output file not found. Send error message - Processing error.')
+            send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
 
     print('Step 1 - Done.')
     print()
