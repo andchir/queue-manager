@@ -132,6 +132,7 @@ def processing(queue_item):
         if not out_video_file_path or not os.path.isfile(out_video_file_path):
             print(f'Output file not found. Send error message - Processing error.')
             send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
+            return None
 
     print('Step 1 - Done.')
     print()
