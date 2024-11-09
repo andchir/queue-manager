@@ -12,6 +12,7 @@ GRAY="\e[2m"
 BLUE="\e[94m\e[1m"
 NC="\e[0m"
 
+source "${DIR}/venv/bin/activate"
 
 if [ "$1" == "-h" ]; then
     echo -e "$NC"
