@@ -8,7 +8,7 @@ DIR_PATH="$(dirname "$1")"
 echo "DIR_PATH: ${DIR_PATH}"
 echo "BASE_NAME: ${BASE_NAME}"
 
-python "/home/andrew/python_projects/LivePortrait/inference.py" \
+python "/home/andrew/python_projects/LivePortrait/""$3" \
 --source "$1" \
 --driving "$2" \
 --output-dir "${DIR_PATH}/output"
