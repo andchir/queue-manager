@@ -67,8 +67,8 @@ def generate_video(image_file_path, driven_video_name=None):
     detect_result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'yolov7.sh'), image_file_path],
                                    capture_output=True, text=True)
 
-    img_type = 'human' if 'person' in detect_result.stdout else 'animal'
-    script_name = 'inference.py' if img_type == 'human' else 'inference_animals.py'
+    img_type = 'person' if 'person' in detect_result.stdout else 'animal'
+    script_name = 'inference.py' if img_type == 'person' else 'inference_animals.py'
     print(img_type)
 
     result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'live-portrait.sh'), image_file_path,
