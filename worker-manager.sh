@@ -33,6 +33,8 @@ if [ $ACTION == 'status' ]; then
     echo -e "$NC"
 
     PIDS="$(pidof "$DIR"/venv/bin/python)"
+    echo -e "${GREEN}PIDs: ${PIDS}"
+    echo -e "$NC"
     IFS=' '
     read -ra PIDS_ARR <<< "$PIDS"
 
