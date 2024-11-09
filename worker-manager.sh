@@ -52,6 +52,4 @@ if [ $ACTION == 'start' ]; then
     echo "                  START                  "
     echo "-----------------------------------------"
     echo -e "$NC"
-
-
 fi
