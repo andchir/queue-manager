@@ -32,7 +32,7 @@ if [ $ACTION == 'status' ]; then
     echo "-----------------------------------------"
     echo -e "$NC"
 
-    PIDS="$(pidof "$DIR"/venv/bin/python)"
+    PIDS="$(pidof python)"
     echo -e "${GREEN}PIDs: ${PIDS}"
     echo -e "$NC"
     IFS=' '
