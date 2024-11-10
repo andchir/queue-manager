@@ -2,6 +2,7 @@
 
 WORKERS=('workers/live-portrait.py' 'workers/code-former.py' 'workers/face-swap.py' 'workers/photo-lip-sync.py')
 WORKERS_NUM=(1, 1, 1, 1)
+WORKERS_NUM_CURRENT=(0, 0, 0, 0)
 
 DIR="$(pwd)"
 ACTION="none"
@@ -25,6 +26,19 @@ if [ -n "$1" ]; then
     ACTION="$1"
 fi
 
+function count_items() {
+    local search_item=$1
+    shift
+    local array=("$@")
+    local COUNT=0
+    for i in "${array[@]}"; do
+        if [ "$i" == "$search_item" ]; then
+            COUNT=$(expr $COUNT + 1)
+        fi
+    done
+    echo "$COUNT"
+}
+
 if [ $ACTION == 'status' ]; then
     echo -e "$NC"
     echo -e "${GRAY}-----------------------------------------"
@@ -33,15 +47,26 @@ if [ $ACTION == 'status' ]; then
     echo -e "$NC"
 
     PIDS="$(pidof python)"
-    echo -e "${GREEN}PIDs: ${PIDS}"
+    echo -e "${BLUE}PIDs: ${PIDS}"
     echo -e "$NC"
     IFS=' '
     read -ra PIDS_ARR <<< "$PIDS"
 
+    PS_ARR=()
+
     for PID in "${PIDS_ARR[@]}"; do
         PS_OUT=$(ps "$PID" | grep 'python' --color=none)
         read -ra PS_OUT_ARR <<< "$PS_OUT"
-        echo -e "${BLUE}${PS_OUT_ARR[5]}"
+        PS_ARR=("${PS_ARR[@]}" "${PS_OUT_ARR[5]}")
+    done
+
+    for worker_name in "${WORKERS[@]}"; do
+        count=$(count_items "$worker_name" "${PS_ARR[@]}")
+        if [ $count != 0 ]; then
+            echo -e "${GREEN}- ${worker_name} [${count}]"
+        else
+            echo -e "${RED}- ${worker_name} [0]"
+        fi
         echo -e "$NC"
     done
 fi
