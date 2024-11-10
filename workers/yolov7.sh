@@ -10,4 +10,4 @@ python detect.py --weights yolov7.pt \
 --conf 0.25 --img-size 640 \
 --source "$1" \
 --device 0 \
---no-trace --nosave --conf-thres 0.9
+--no-trace --nosave --conf-thres 0.8
