@@ -1,8 +1,7 @@
 #!/bin/bash
 
 WORKERS=('workers/live-portrait.py' 'workers/code-former.py' 'workers/face-swap.py' 'workers/photo-lip-sync.py')
-WORKERS_NUM=(1, 1, 1, 1)
-WORKERS_NUM_CURRENT=(0, 0, 0, 0)
+WORKERS_NUM=(1 1 1 1)
 
 DIR="$(pwd)"
 ACTION="none"
@@ -12,6 +11,7 @@ RED="\e[31m"
 GRAY="\e[2m"
 BLUE="\e[94m\e[1m"
 NC="\e[0m"
+BOLD="\e[1m"
 
 source "${DIR}/venv/bin/activate"
 
@@ -24,6 +24,8 @@ fi
 
 if [ -n "$1" ]; then
     ACTION="$1"
+else
+    exit 0
 fi
 
 function count_items() {
@@ -39,6 +41,19 @@ function count_items() {
     echo "$COUNT"
 }
 
+PIDS="$(pidof python)"
+echo -e "${BLUE}PIDs: ${PIDS}""$NC"
+IFS=' '
+read -ra PIDS_ARR <<< "$PIDS"
+
+PS_ARR=()
+
+for PID in "${PIDS_ARR[@]}"; do
+    PS_OUT=$(ps "$PID" | grep 'python' --color=none)
+    read -ra PS_OUT_ARR <<< "$PS_OUT"
+    PS_ARR=("${PS_ARR[@]}" "${PS_OUT_ARR[5]}")
+done
+
 if [ $ACTION == 'status' ]; then
     echo -e "$NC"
     echo -e "${GRAY}-----------------------------------------"
@@ -46,26 +61,12 @@ if [ $ACTION == 'status' ]; then
     echo "-----------------------------------------"
     echo -e "$NC"
 
-    PIDS="$(pidof python)"
-    echo -e "${BLUE}PIDs: ${PIDS}"
-    echo -e "$NC"
-    IFS=' '
-    read -ra PIDS_ARR <<< "$PIDS"
-
-    PS_ARR=()
-
-    for PID in "${PIDS_ARR[@]}"; do
-        PS_OUT=$(ps "$PID" | grep 'python' --color=none)
-        read -ra PS_OUT_ARR <<< "$PS_OUT"
-        PS_ARR=("${PS_ARR[@]}" "${PS_OUT_ARR[5]}")
-    done
-
     for worker_name in "${WORKERS[@]}"; do
         count=$(count_items "$worker_name" "${PS_ARR[@]}")
-        if [ $count != 0 ]; then
-            echo -e "${GREEN}- ${worker_name} [${count}]"
+        if [[ "$count" -lt "${WORKERS_NUM[$i]}" ]]; then
+            echo -e "${RED}- ${worker_name} [${count}]"
         else
-            echo -e "${RED}- ${worker_name} [0]"
+            echo -e "${GREEN}- ${worker_name} [${count}]"
         fi
         echo -e "$NC"
     done
@@ -77,4 +78,48 @@ if [ $ACTION == 'start' ]; then
     echo "                  START                  "
     echo "-----------------------------------------"
     echo -e "$NC"
+
+    STARTED_COUNT=0
+    i=0
+    for worker_name in "${WORKERS[@]}"
+    do
+        count=$(count_items "$worker_name" "${PS_ARR[@]}")
+        NUM=$((WORKERS_NUM[$i] - count))
+        if [[ "$count" -lt "${WORKERS_NUM[$i]}" ]]; then
+
+            for (( j=0; j<${NUM}; j++ )); do
+                echo -e "${GRAY}${BOLD}Starting${NC} ${worker_name}"
+                nohup python "${worker_name}" > "$worker_name"_log.txt 2>&1 &
+                ((STARTED_COUNT++))
+            done
+
+        fi
+        ((i++))
+    done
+
+    echo -e "${GREEN}Started: ${STARTED_COUNT}"
+fi
+
+if [ $ACTION == 'stop' ]; then
+    echo -e "$NC"
+    echo -e "${GRAY}-----------------------------------------"
+    echo "                  STOP                  "
+    echo "-----------------------------------------"
+    echo -e "$NC"
+
+    STOPPED_COUNT=0
+
+    for PID in "${PIDS_ARR[@]}"; do
+        PS_OUT=$(ps "$PID" | grep 'python' --color=none)
+        read -ra PS_OUT_ARR <<< "$PS_OUT"
+        for worker_name in "${WORKERS[@]}"; do
+            if [ "$worker_name" == "${PS_OUT_ARR[5]}" ]; then
+                echo -e "${GRAY}${BOLD}Stopping ${PID}${NC}" "${PS_OUT_ARR[5]}"
+                kill "$PID"
+                ((STOPPED_COUNT++))
+            fi
+        done
+    done
+
+    echo -e "${GREEN}Stopped: ${STOPPED_COUNT}"
 fi
