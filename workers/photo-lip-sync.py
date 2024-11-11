@@ -45,8 +45,8 @@ def generate_video_from_photo(image_file_path, duration=None):
     else:
         driving_video_path = '/home/andrew/python_projects/LivePortrait/assets/examples/driving/face_speaking.pkl'
 
-    result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'live-portrait.sh', 'inference.py'), image_file_path,
-                             driving_video_path], capture_output=True, text=True)
+    result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'live-portrait.sh'), image_file_path,
+                             driving_video_path, 'inference.py'], capture_output=True, text=True)
 
     output_dir_path = os.path.dirname(image_file_path)
     output_file_name = os.path.join(output_dir_path, 'output', f'{basename(image_file_path)}--{basename(driving_video_path)}.mp4')
