@@ -89,7 +89,7 @@ if [ $ACTION == 'start' ]; then
 
             for (( j=0; j<${NUM}; j++ )); do
                 echo -e "${GRAY}${BOLD}Starting${NC} ${worker_name}"
-                nohup python "${worker_name}" > "$worker_name"_log.txt 2>&1 &
+                nohup python "${worker_name}" > "${worker_name/\//_}"_log.txt 2>&1 &
                 ((STARTED_COUNT++))
             done
 
