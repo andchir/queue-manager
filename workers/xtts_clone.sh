@@ -5,5 +5,3 @@ export TTS_HOME="/home/andrew/python_projects/coqui-ai-TTS/.local"
 
 cd /home/andrew/python_projects/coqui-ai-TTS
 python clone_voice.py "$1" "$2"
-
-echo "Done."

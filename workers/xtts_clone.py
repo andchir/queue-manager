@@ -20,7 +20,10 @@ def clone_voice_action(audio_file_path):
     result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'xtts_clone.sh'),
                              audio_file_path, voice_uuid], capture_output=True, text=True)
 
-    print(result.stderr, result.stdout)
+    print(result.stdout)
+
+    if 'Done.' in result.stdout:
+        return voice_uuid
 
     return None
 
