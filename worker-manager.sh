@@ -1,6 +1,7 @@
 #!/bin/bash
 
 WORKERS=('workers/live-portrait.py' 'workers/code-former.py' 'workers/face-swap.py' 'workers/photo-lip-sync.py')
+QUEUE_SIZE_URLS=('https://queue.api2app.ru/queue_size/fe10d225-fbae-47b8-9e13-9beb9c1890b8')
 WORKERS_NUM=(1 1 1 1)
 
 DIR="$(pwd)"
@@ -69,6 +70,11 @@ if [ $ACTION == 'status' ]; then
             echo -e "${GREEN}- ${worker_name} [${count}]"
         fi
         echo -e "$NC"
+    done
+
+    for queue_size_url in "$QUEUE_SIZE_URLS"; do
+        queue_size=$(curl -s "$queue_size_url" | python3 -c "import sys, json; print(json.load(sys.stdin)['queue_size'])")
+        echo -e "${GRAY}Queue size: ${queue_size}"
     done
 fi
 
