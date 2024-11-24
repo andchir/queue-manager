@@ -6,8 +6,8 @@ import subprocess
 import uuid
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.queue_manager import get_queue_next, send_queue_error
-from utils.upload_file import upload_from_url
+from utils.queue_manager import get_queue_next, send_queue_error, send_queue_result_dict
+from utils.upload_file import upload_from_url, delete_old_files
 from utils.video_audio import cut_audio_duration
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -54,11 +54,15 @@ def processing(queue_item):
     voice_uuid = clone_voice_action(audio_file_path)
 
     if voice_uuid:
-        print('voice_uuid', voice_uuid)
+        res = send_queue_result_dict(queue_item['uuid'], {'voice_uuid': voice_uuid})
+        print()
+        print('Completed.')
     else:
         print(f'Output is empty. Send error message - Processing error.')
         send_queue_error(queue_item['uuid'], 'Processing error. Please try again later.')
 
+    deleted_input = delete_old_files(upload_dir_path, max_hours=2)
+    print('Deleted old files: ', deleted_input)
 
     print('---------------------')
     if 'pending' in queue_item:
