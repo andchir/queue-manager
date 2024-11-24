@@ -26,8 +26,6 @@ def clone_voice_action(audio_file_path):
 
 
 def processing(queue_item):
-    print(queue_item)
-
     upload_dir_path = os.path.join(ROOT_DIR, 'uploads', 'xtts')
     if not queue_item or 'data' not in queue_item:
         print(f'Send error message - Bad data.')
