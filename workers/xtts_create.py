@@ -38,6 +38,7 @@ def processing(queue_item):
     task_uuid = queue_item['uuid'] if 'uuid' in queue_item else ''
     upload_dir_path = os.path.join(ROOT_DIR, 'uploads', 'xtts_output')
 
+    print('---------------------')
     print('Creating TTS audio...')
     file_path = create_tts_audio(text, language, voice, task_uuid)
 
