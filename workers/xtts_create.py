@@ -13,7 +13,7 @@ from utils.video_audio import cut_audio_duration
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def create_tts_audio(text, language, voice, uuid):
+def create_tts_audio(text, language, voice, speaker_name=None, uuid=''):
 
     upload_dir_path = os.path.join(ROOT_DIR, 'uploads', 'xtts_output')
     output_file_path = os.path.join(upload_dir_path, 'output_' + uuid + '.wav')
@@ -34,13 +34,26 @@ def processing(queue_item):
     text = data['text'] if 'text' in data else ''
     language = data['language'] if 'language' in data else 'en'
     voice = data['voice'] if 'voice' in data else 'Claribel Dervla'
+    speaker_name = data['speaker_name'] if 'speaker_name' in data else None
 
     task_uuid = queue_item['uuid'] if 'uuid' in queue_item else ''
     upload_dir_path = os.path.join(ROOT_DIR, 'uploads', 'xtts_output')
 
+    if speaker_name:
+        clone_file_path = os.path.join(
+            '/media/andrew/256GB/python_projects/coqui-ai-TTS',
+            'demo_outputs', 'cloned_speakers', speaker_name + '.json'
+        )
+        if not os.path.exists(clone_file_path):
+            print('Voice not found. Send error message.')
+            send_queue_error(queue_item['uuid'], 'Voice not found.')
+            return
+        else:
+            voice = speaker_name
+
     print('---------------------')
     print('Creating TTS audio...')
-    file_path = create_tts_audio(text, language, voice, task_uuid)
+    file_path = create_tts_audio(text, language, voice, speaker_name, task_uuid)
 
     if file_path and os.path.isfile(file_path):
         print('Uploading a file to YaDisk...')
