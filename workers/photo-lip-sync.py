@@ -89,6 +89,7 @@ def processing(queue_item):
             if 'audio_file' in queue_item['data'] else queue_item['data']['audio_url']
         try:
             audio_file_path = upload_from_url(upload_dir_path, audio_url, type='audio')
+            # print('audio_file_path', audio_file_path)
             audio_file_path = cut_audio_duration(audio_file_path, MAX_AUDIO_LENGTH)
         except Exception as e:
             print(f'Error', str(e))

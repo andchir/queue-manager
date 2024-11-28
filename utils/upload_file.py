@@ -30,12 +30,18 @@ def upload_from_url(dir_path: str, file_url: str, type='image'):
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path)
 
-    file_extension = file_url.split('.')[-1]
     item_uuid = str(uuid.uuid1())
-    file_name = f'{item_uuid}.{file_extension }'
+    file_extension = file_url.split('.')[-1]
+    file_name = f'{item_uuid}.{file_extension}'
 
+    resp = requests.get(file_url)
+    if 'Content-Disposition' in resp.headers:
+        attachment_file_name = resp.headers['Content-Disposition']
+        file_extension = attachment_file_name.split('.')[-1]
+        file_name = f'{item_uuid}.{file_extension}'
+
+    contents = resp.content
     file_path = os.path.join(dir_path, file_name)
-    contents = requests.get(file_url).content
 
     open(file_path, 'wb').write(contents)
 
