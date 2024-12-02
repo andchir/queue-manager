@@ -22,8 +22,8 @@ class Task(Base):
     data: Mapped[str] = mapped_column(String(512), nullable=True, default=None)
     webhook_url: Mapped[str] = mapped_column(String(256), nullable=True, default=None)
 
-    queue = relationship('models.queue.Queue', back_populates='task', cascade='all,delete',
-                         single_parent=True, lazy='subquery', passive_deletes=True)
+    queue_list = relationship('models.queue.Queue', back_populates='task', cascade='all,delete-orphan',
+                              single_parent=True, lazy='subquery', passive_deletes=True)
 
     def to_read_model(self) -> TaskSchema:
         return TaskSchema(
@@ -34,5 +34,5 @@ class Task(Base):
             owner=self.owner,
             data=self.data,
             webhook_url=self.webhook_url,
-            queue=self.queue
+            queue_list=self.queue_list
         )

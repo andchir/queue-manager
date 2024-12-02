@@ -23,7 +23,7 @@ class TaskDetailedSchema(BaseModel):
     owner: str | None = None
     data: str | None = None
     webhook_url: str | None = None
-    queue: list[QueueSchema] = []
+    queue_list: list[QueueSchema] = []
 
     class Config:
         from_attributes = True

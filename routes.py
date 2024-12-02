@@ -346,6 +346,7 @@ def delete_queue_items_action(limit: int, task_uuid: str | None = None) -> Union
         if task_uuid is not None:
             task_repository = TasksRepository(session)
             task = task_repository.find_one_by_uuid(task_uuid)
+            task_id = task.id if task else None
 
             if task is None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task not found.')
@@ -353,7 +354,6 @@ def delete_queue_items_action(limit: int, task_uuid: str | None = None) -> Union
         queue_repository = QueueRepository(session)
 
         rowcount = queue_repository.delete_old(limit=limit, task_id=task_id)
-        print(task_uuid, limit, rowcount)
 
     if rowcount > 0:
         return {
