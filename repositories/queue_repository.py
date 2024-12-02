@@ -46,3 +46,22 @@ class QueueRepository(SQLAlchemyRepository):
         except NoResultFound:
             return None
         return result.first()
+
+    def delete_old(self, limit=10, task_id=None) -> int:
+        stmt = (select(self.model).filter_by(task_id=task_id).order_by(self.model.id.asc()).limit(limit)
+                if task_id is not None
+                else select(self.model).order_by(self.model.id.asc()).limit(limit))
+        res = self.session.execute(stmt)
+        rowcount = 0
+
+        for item in res.all():
+            try:
+                self.session.delete(item[0])
+            except:
+                self.session.rollback()
+                raise
+            else:
+                self.session.commit()
+            rowcount += 1
+
+        return rowcount

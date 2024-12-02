@@ -1,7 +1,7 @@
 import datetime
 import json
 import os
-from typing import Union
+from typing import Union, Optional
 import requests
 import codecs
 
@@ -17,7 +17,7 @@ from repositories.tasks_repository import TasksRepository
 from schemas.proxy_schema import ProxySchema, ProxyAddSchema
 from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema, QueueSchema, QueueResultSchema, QueueSizeSchema
 from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId, ResponseQueueItems, \
-    ResponseItemUuid, ResponseProxyItems
+    ResponseItemUuid, ResponseProxyItems, DataResponseDeletedSuccess
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
 from utils.restore_outdated_queue_items import restore_outdated_queue_items
 from utils.security import check_authentication_header
@@ -335,6 +335,32 @@ def set_queue_result_action(uuid: str, message: str = Form()) -> Union[QueueSche
 
         return result
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
+
+
+@router.delete('/queue_delete_old/{limit}', name='Delete old queue entries', tags=['Queue'],
+               dependencies=[Depends(check_authentication_header)],
+               response_model=DataResponseDeletedSuccess)
+def delete_queue_items_action(limit: int, task_uuid: str | None = None) -> Union[DataResponseDeletedSuccess, dict]:
+    with session_maker() as session:
+        task_id = None
+        if task_uuid is not None:
+            task_repository = TasksRepository(session)
+            task = task_repository.find_one_by_uuid(task_uuid)
+
+            if task is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task not found.')
+
+        queue_repository = QueueRepository(session)
+
+        rowcount = queue_repository.delete_old(limit=limit, task_id=task_id)
+        print(task_uuid, limit, rowcount)
+
+    if rowcount > 0:
+        return {
+            'success': True,
+            'deleted': rowcount
+        }
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Items with task UUID {task_uuid} not found.')
 
 
 @router.post('/proxy', name='Create Proxy Item', tags=['Proxy'],

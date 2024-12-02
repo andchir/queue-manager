@@ -16,6 +16,19 @@ class DataResponseSuccess(BaseModel):
         }
 
 
+class DataResponseDeletedSuccess(BaseModel):
+    success: bool
+    deleted: int
+
+    class Config:
+        json_schema_extra = {
+            'example': {
+                'success': True,
+                'deleted': 2
+            }
+        }
+
+
 class DataResponseMessage(BaseModel):
     success: bool
     msg: str
