@@ -51,17 +51,18 @@ class QueueRepository(SQLAlchemyRepository):
         stmt = (select(self.model).filter_by(task_id=task_id).order_by(self.model.id.asc()).limit(limit)
                 if task_id is not None
                 else select(self.model).order_by(self.model.id.asc()).limit(limit))
-        res = self.session.execute(stmt)
+
         rowcount = 0
 
-        for item in res.all():
-            try:
+        try:
+            res = self.session.execute(stmt)
+            for item in res.all():
                 self.session.delete(item[0])
-            except:
-                self.session.rollback()
-                raise
-            else:
-                self.session.commit()
-            rowcount += 1
+                rowcount += 1
+        except:
+            self.session.rollback()
+            raise
+        else:
+            self.session.commit()
 
         return rowcount
