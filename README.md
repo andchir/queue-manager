@@ -41,6 +41,9 @@ Create SQLite database:
 sqlite3 app_database.db
 .databases
 .quit
+
+repacking it into a minimal amount of disk space:
+VACUUM;
 ~~~
 
 Update Python sqlite3 module:
