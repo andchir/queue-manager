@@ -1,6 +1,7 @@
 #!/bin/bash
 
-WORKERS=('workers/live-portrait.py' 'workers/code-former.py' 'workers/face-swap.py' 'workers/photo-lip-sync.py' 'workers/xtts_create.py' 'workers/xtts_clone.py')
+# WORKERS=('workers/live-portrait.py' 'workers/code-former.py' 'workers/face-swap.py' 'workers/photo-lip-sync.py' 'workers/xtts_create.py' 'workers/xtts_clone.py')
+WORKERS=('workers/live-portrait.py' 'workers/code-former.py' 'workers/face-swap.py')
 WORKERS_NUM=(1 1 1 1 1 1)
 QUEUE_SIZE_URLS=('https://queue.api2app.ru/queue_size/fe10d225-fbae-47b8-9e13-9beb9c1890b8')
 

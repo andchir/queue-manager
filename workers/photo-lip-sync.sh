@@ -5,8 +5,9 @@
 # 'b3ea1d8f-8020-4549-9b07-ec2012451d0c'
 
 cd '/home/andrew/python_projects/facefusion'
-source '/home/andrew/.zshrc'
-conda activate facefusion
+source 'venv/bin/activate'
+# source '/home/andrew/.zshrc'
+# conda activate facefusion
 
 UUID="$3"
 BASE_NAME="$(basename "$1")"
