@@ -46,6 +46,9 @@ def processing(queue_item):
         print('Pending:', queue_item['pending'])
     print('Processing...')
 
+    colorize = True if queue_item['data'] and queue_item['data']['input'] == 'colorize' else False
+    print('colorize', colorize)
+
     try:
         image_file_path = image_resize(image_file_path, base_width=3000)
     except Exception as e:
@@ -66,6 +69,13 @@ def processing(queue_item):
     if file_path and os.path.isfile(file_path):
         # print('Uploading a file to Google Drive...')
         # shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='image')
+
+        if colorize:
+            print('Colorizing...')
+            result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'colorize_ddcolor.sh'), file_path],
+                                    capture_output=True, text=True)
+            if result.stdout and os.path.isfile(result.stdout.strip()):
+                file_path = result.stdout.strip()
 
         print('Converting to JPG...')
         file_path = convert_to_jpg(file_path)
