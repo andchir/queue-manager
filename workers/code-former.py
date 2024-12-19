@@ -3,6 +3,7 @@ import subprocess
 import sys
 import time
 import datetime
+import shutil
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.upload_to_yadisk import upload_and_share_file
@@ -75,7 +76,9 @@ def processing(queue_item):
             result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'colorize_ddcolor.sh'), file_path],
                                     capture_output=True, text=True)
             if result.stdout and os.path.isfile(result.stdout.strip()):
-                file_path = result.stdout.strip()
+                new_file_path = result.stdout.strip()
+                shutil.move(new_file_path, file_path.replace('.png', '_colorized.png'))
+                file_path = file_path.replace('.png', '_colorized.png')
 
         print('Converting to JPG...')
         file_path = convert_to_jpg(file_path)
