@@ -58,7 +58,7 @@ def processing(queue_item):
     result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'invsr-upscaler.sh'), image_file_path],
                             capture_output=True, text=True)
 
-    print(result.stdout)
+    # print(result.stdout)
 
     file_path = os.path.join(dir_path, 'output',
                              file_basename.replace('.jpg', '.png').replace('.jpeg', '.png'))
@@ -69,33 +69,17 @@ def processing(queue_item):
         # print('Uploading a file to Google Drive...')
         # shared_file_link = upload_and_share_file(file_path, settings.gdrive_folder_id, type='image')
 
-        if colorize:
-            print('Colorizing...')
-            result = subprocess.run([os.path.join(ROOT_DIR, 'workers', 'colorize_ddcolor.sh'), file_path],
-                                    capture_output=True, text=True)
-            if result.stdout and os.path.isfile(result.stdout.strip()):
-                new_file_path = result.stdout.strip()
-                shutil.move(new_file_path, file_path.replace('.png', '_colorized.png'))
-                file_path = file_path.replace('.png', '_colorized.png')
-
         print('Converting to JPG...')
         file_path = convert_to_jpg(file_path)
 
         print('Uploading a file to YaDisk...')
-        file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
-        print('Done.', public_url)
-
-        result_data = {'result': file_url}
-        if 'upload_url' in queue_item['data'] and queue_item['data']['upload_url'].find('https://pu.vk.com/') == 0:
-            print()
-            print('Uploading to VK...')
-            try:
-                vk_resp_data = upload_to_vk(file_path, queue_item['data']['upload_url'])
-                if vk_resp_data and 'file' in vk_resp_data:
-                    result_data['vk_file_to_save'] = vk_resp_data['file']
-                    print('Done.')
-            except Exception as e:
-                print('ERROR:', str(e))
+        try:
+            file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
+            print('Done.', public_url)
+            result_data = {'result': file_url, 'public_url': public_url}
+        except Exception as e:
+            print('ERROR:', str(e))
+            result_data = {}
 
         print('Sending the result...')
         res = send_queue_result_dict(queue_item['uuid'], result_data)
