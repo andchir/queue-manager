@@ -14,6 +14,7 @@ from utils.queue_manager import send_queue_error, get_queue_next, send_queue_res
 from utils.upload_file import upload_from_url, delete_old_files
 from utils.upload_to_vk import upload_to_vk
 from utils.image_resize import image_resize
+from utils.telegram import send_message_to_bot
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -92,6 +93,8 @@ def processing(queue_item):
         print('Done.', public_url)
 
         result_data = {'result': file_url, 'public_url': public_url}
+
+        send_message_to_bot(f'FaceSwap result: {public_url}')
 
         # if 'upload_url' in queue_item['data'] and queue_item['data']['upload_url'].find('https://pu.vk.com/') == 0:
         #     print()

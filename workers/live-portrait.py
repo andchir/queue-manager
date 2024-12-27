@@ -14,6 +14,7 @@ from utils.queue_manager import send_queue_error, get_queue_next, send_queue_res
 from utils.upload_file import upload_from_url, delete_old_files
 from utils.upload_to_vk import upload_to_vk
 from utils.image_resize import image_resize
+from utils.telegram import send_message_to_bot
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -134,6 +135,8 @@ def processing(queue_item):
             file_url, public_url = upload_and_share_file(file_path, 'api2app/media')
             print('Done.', public_url)
             result_data = {'result': file_url, 'public_url': public_url}
+
+            send_message_to_bot(f'LivePortrait result: {public_url}')
         except Exception as e:
             print('ERROR:', str(e))
             result_data = {}
