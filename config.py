@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     gdrive_folder_id: str = ''
     yadisk_token: str = ''
     ws_enabled: str = 'true'
+    tg_bot_token: str = ''
+    tg_chat_id: str = ''
 
     class Config:
         env_file = '.env'
