@@ -8,6 +8,8 @@ from typing import IO
 import filetype
 from pydub import AudioSegment
 
+from utils.video_audio import cut_audio_duration
+
 
 def upload_file(file: UploadFile, dir_path: str, type='image'):
     if not os.path.isdir(dir_path):

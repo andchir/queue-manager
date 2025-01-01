@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import uuid
 import asyncio
 import signal
@@ -44,7 +45,7 @@ async def register(websocket):
         print('Connections total:', len(CONNECTIONS))
 
 
-async def main():
+async def main(port=8765):
     print('Starting WebSocket server')
 
     # Set the stop condition when receiving SIGTERM.
@@ -52,9 +53,11 @@ async def main():
     stop = loop.create_future()
     loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
 
-    async with websockets.serve(register, host='', port=8765, reuse_port=True):
+    async with websockets.serve(register, host='', port=port, reuse_port=True):
         await asyncio.Future()  # Run forever
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    args = sys.argv[1:]
+    port_num = args[0] if len(args) > 0 else 8765
+    asyncio.run(main(port=port_num))

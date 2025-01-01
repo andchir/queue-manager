@@ -124,7 +124,7 @@ sudo cp web/supervisord.conf /etc/supervisor/conf.d/queue-websocket.conf
 sudo systemctl status supervisor
 sudo systemctl restart supervisor
 
-python web/server.py
+python web/server.py 8765
 supervisord -c web/supervisord.conf -n
 python -m websockets ws://localhost:8765/
 ~~~
