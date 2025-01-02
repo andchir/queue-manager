@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     gdrive_folder_id: str = ''
     yadisk_token: str = ''
     ws_enabled: str = 'true'
+    ws_port: int = 8765
     tg_bot_token: str = ''
     tg_chat_id: str = ''
 

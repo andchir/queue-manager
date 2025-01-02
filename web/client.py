@@ -4,10 +4,11 @@ import sys
 import json
 import asyncio
 import websockets
+from config import settings
 
 
 async def send_message(recipient_uuid, message):
-    uri = 'ws://localhost:8765'
+    uri = f'ws://localhost:{settings.ws_port}'
     async with websockets.connect(uri) as websocket:
         data = {'recipient_uuid': recipient_uuid, 'message': message}
 
