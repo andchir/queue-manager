@@ -25,28 +25,29 @@ class SQLAlchemyRepository(AbstractRepository):
             data['uuid'] = item_uuid
         if not self.session.in_transaction():
             self.session.begin()
-        stmt = insert(self.model).values(**data).returning(self.model)
+        stmt = insert(self.model).values(**data)# .returning(self.model)
         try:
-            res = self.session.execute(stmt).scalar_one()
+            lastrowid = self.session.execute(stmt).inserted_primary_key[0]#.lastrowid# .scalar_one()
         except:
             self.session.rollback()
             raise
         else:
             self.session.commit()
-        return res.to_read_model() if res else None
+        return self.session.query(self.model).filter_by(id=lastrowid).one().to_read_model()
+        # return res.to_read_model() if res else None
 
     def update_one(self, data: dict, item_id: int):
         if not self.session.in_transaction():
             self.session.begin()
-        stmt = update(self.model).where(self.model.id == item_id).values(**data).returning(self.model)
+        stmt = update(self.model).where(self.model.id == item_id).values(**data)# .returning(self.model)
         try:
-            res = self.session.execute(stmt).scalar()
+            lastrowid = self.session.execute(stmt).inserted_primary_key[0]# .lastrowid# .scalar()
         except:
             self.session.rollback()
             raise
         else:
             self.session.commit()
-        return res.to_read_model() if res else None
+        return self.session.query(self.model).filter_by(id=lastrowid).one().to_read_model()
 
     def find_one(self, item_id: int):
         try:
