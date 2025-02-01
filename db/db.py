@@ -7,6 +7,7 @@ if settings.sqlite_db_name:
 else:
     engine = create_engine(
         'mysql+pymysql://' + settings.mysql_connection_string
+        # 'mariadb+pymysql://' + settings.mysql_connection_string
     )
 session_maker = sessionmaker(engine)
 
