@@ -55,6 +55,11 @@ sudo cp libsqlite3.so.0 /lib/x86_64-linux-gnu/libsqlite3.so.0
 python3.10 -c "import sqlite3; print(sqlite3.sqlite_version)"
 ~~~
 
+Create alembic.ini:
+~~~
+cp alembic.ini-dest alembic.ini
+~~~
+
 Generate API key:
 ~~~
 python -c "import uuid; print(str(uuid.uuid4()))"
