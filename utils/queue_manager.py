@@ -1,4 +1,5 @@
 import requests
+import time
 
 
 def get_queue_next(task_uuid):
@@ -35,3 +36,16 @@ def send_queue_error(queue_uuid, message):
     r = requests.post(url=queue_url, data=payload)
     return r.json()
 
+
+def polling_queue(item_uuid, callback_func, interval_sec=10):
+    show_message = True
+    while True:
+        queue_item = get_queue_next(item_uuid)
+        if queue_item is not None:
+            callback_func(queue_item)
+            show_message = True
+        else:
+            if show_message:
+                print('Waiting for a task...')
+                show_message = False
+            time.sleep(interval_sec)
