@@ -123,9 +123,6 @@ async def create_queue_action(
     else:
         data = {'data': {'input': data}}
 
-    if not user_id and 'user_id' in data:
-        user_id = int(data['user_id'])
-
     if 'data' not in data:
         data['data'] = data.copy()
         if 'owner' in data['data']:
@@ -171,6 +168,14 @@ async def create_queue_action(
     item_uuid = None
     if 'uid' in data['data'] or 'uuid' in data['data']:
         item_uuid = data['data']['uid'] if 'uid' in data['data'] else data['data']['uuid']
+
+    if 'user_id' in data:
+        user_id = int(data['user_id'])
+        del data['user_id']
+
+    if 'user_id' in data['data']:
+        user_id = int(data['data']['user_id'])
+        del data['data']['user_id']
 
     if not user_id:
         user_id = 0
