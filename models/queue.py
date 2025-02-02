@@ -1,5 +1,5 @@
 from enum import Enum
-from sqlalchemy import JSON, String, ForeignKey, DateTime
+from sqlalchemy import JSON, String, ForeignKey, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.db import Base
 import uuid
@@ -32,6 +32,7 @@ class Queue(Base):
     owner: Mapped[str] = mapped_column(String(256), nullable=True, default=None)
     time_created: Mapped[str] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
     time_updated: Mapped[str] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    user_id: Mapped[int] = mapped_column(Integer(), nullable=True, default=None)
 
     task_id: Mapped[int] = mapped_column(ForeignKey('tasks.id', ondelete='CASCADE'))
     task = relationship('models.task.Task', back_populates='queue_list')
@@ -46,5 +47,6 @@ class Queue(Base):
             data=self.data,
             result_data=self.result_data,
             time_created=self.time_created.strftime('%Y-%m-%d %H:%M:%S') if isinstance(self.time_created, datetime.datetime) else self.time_created,
-            time_updated=self.time_updated.strftime('%Y-%m-%d %H:%M:%S') if isinstance(self.time_updated, datetime.datetime) else self.time_updated
+            time_updated=self.time_updated.strftime('%Y-%m-%d %H:%M:%S') if isinstance(self.time_updated, datetime.datetime) else self.time_updated,
+            user_id=self.user_id
         )

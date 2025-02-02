@@ -111,6 +111,7 @@ async def create_queue_action(
         request: Request,
         task_uuid: str,
         data: str = Form(None),
+        user_id: int = 0,
         image_file: UploadFile = None,
         image_file2: UploadFile = None,
         video_file: UploadFile = None,
@@ -168,12 +169,15 @@ async def create_queue_action(
     if 'uid' in data['data'] or 'uuid' in data['data']:
         item_uuid = data['data']['uid'] if 'uid' in data['data'] else data['data']['uuid']
 
+    if not user_id:
+        user_id = 0
+
     with session_maker() as session:
         task_repository = TasksRepository(session)
         task = task_repository.find_one_by_uuid(task_uuid)
 
         if task is not None:
-            queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, **data)
+            queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, user_id=user_id, **data)
             queue_repository = QueueRepository(session)
             queue_item = queue_repository.add_one(queue_item_new.model_dump(), item_uuid=item_uuid)
             return {
