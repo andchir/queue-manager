@@ -170,10 +170,11 @@ async def create_queue_action(
         item_uuid = data['data']['uid'] if 'uid' in data['data'] else data['data']['uuid']
 
     if 'user_id' in data:
-        user_id = int(data['user_id'])
+        if not user_id:
+            user_id = int(data['user_id'])
         del data['user_id']
 
-    if 'user_id' in data['data']:
+    if not user_id and 'user_id' in data['data']:
         user_id = int(data['data']['user_id'])
         del data['data']['user_id']
 
