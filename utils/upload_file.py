@@ -53,8 +53,8 @@ def upload_from_url(dir_path: str, file_url: str, type='image'):
 
 
 def validate_file_size(real_file_size, type='image'):
-    IMAGE_MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
-    AUDIO_MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+    IMAGE_MAX_FILE_SIZE = 20 * 1024 * 1024  # 10MB
+    AUDIO_MAX_FILE_SIZE = 20 * 1024 * 1024  # 10MB
     VIDEO_MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
 
     if (
