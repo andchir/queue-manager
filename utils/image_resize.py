@@ -1,25 +1,26 @@
 from PIL import Image, ImageOps
 
 
-def image_resize(image_path, base_width=2000, up_scale=False):
+def image_resize(image_path, base_width=2000, up_scale=False, return_size=False):
     img = Image.open(image_path)
     ext = image_path.split('.')[-1]
     if ext not in ['jpg', 'jpeg', 'png']:
-        return image_path
+        return image_path, [] if return_size else image_path
 
     img = ImageOps.exif_transpose(img)
 
     width, height = img.size
     if width <= base_width and not up_scale:
-        return image_path
+        return image_path, [width, height] if return_size else image_path
     output_path = image_path.replace('.' + ext, '_resized.' + ext)
     w_percent = (base_width / float(width))
     h_size = int((float(height) * float(w_percent)))
 
     img = img.resize((base_width, h_size), Image.Resampling.LANCZOS)
     img.save(output_path, subsampling=0, quality=92)
+    width, height = img.size
 
-    return output_path
+    return output_path, [width, height] if return_size else image_path
 
 
 def convert_to_jpg(image_path):
