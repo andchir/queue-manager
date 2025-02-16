@@ -17,10 +17,10 @@ def cut_audio_duration(file_path, max_dur=60):
     return file_path_out
 
 
-def get_audio_duration(file_path):
+def get_audio_duration(file_path, use_ceil=True):
     format = file_path[-3:].lower()
     audio = AudioSegment.from_file(file_path, format=format)
-    return audio.duration_seconds
+    return math.ceil(audio.duration_seconds) if use_ceil else int(audio.duration_seconds)
 
 
 def video_create_duration(file_path, target_duration, start_time=0):
