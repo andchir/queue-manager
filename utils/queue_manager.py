@@ -1,11 +1,12 @@
 import requests
 import time
 
+from config import settings
 from utils.upload_file import upload_from_url
 
 
 def get_queue_next(task_uuid):
-    queue_url = 'https://queue.api2app.ru/queue_next/{}'.format(task_uuid)
+    queue_url = 'https://{}/queue_next/{}'.format(settings.app_server_name, task_uuid)
     try:
         r = requests.get(url=queue_url)
     except Exception as e:
@@ -16,7 +17,7 @@ def get_queue_next(task_uuid):
 
 
 def send_queue_result(queue_uuid, result_str, key='result'):
-    queue_url = 'https://queue.api2app.ru/queue_result/{}'.format(queue_uuid)
+    queue_url = 'https://{}/queue_result/{}'.format(settings.app_server_name, queue_uuid)
     payload = {
         'result_data': dict(zip([key], [result_str]))
     }
@@ -25,7 +26,7 @@ def send_queue_result(queue_uuid, result_str, key='result'):
 
 
 def send_queue_result_dict(queue_uuid, result_dict):
-    queue_url = 'https://queue.api2app.ru/queue_result/{}'.format(queue_uuid)
+    queue_url = 'https://{}/queue_result/{}'.format(settings.app_server_name, queue_uuid)
     payload = {
         'result_data': result_dict
     }
@@ -34,7 +35,7 @@ def send_queue_result_dict(queue_uuid, result_dict):
 
 
 def send_queue_error(queue_uuid, message):
-    queue_url = 'https://queue.api2app.ru/queue_error/{}'.format(queue_uuid)
+    queue_url = 'https://{}/queue_error/{}'.format(settings.app_server_name, queue_uuid)
     payload = {'message': message}
     r = requests.post(url=queue_url, data=payload)
     return r.json()

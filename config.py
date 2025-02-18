@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     app_name: str = 'Queue Manager'
+    app_server_name: str = 'queue.api2app.ru'
     admin_email: str = 'aaa@bbb.cc'
     api_keys: str = ''
     sqlite_db_name: str = 'app_database.db'
