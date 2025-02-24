@@ -14,3 +14,14 @@ def check_authentication_header(api_key: str = Depends(api_key_header)):
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Invalid API Key.',
     )
+
+def check_authentication_header_task(api_key: str = Depends(api_key_header)):
+    if settings.use_task_api_keys:
+        return {}
+    api_keys = settings.api_keys.split(',')
+    if api_key in api_keys:
+        return {}
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail='Invalid API Key.',
+    )

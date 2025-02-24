@@ -21,6 +21,7 @@ class Task(Base):
     owner: Mapped[str] = mapped_column(String(256), nullable=True, default=None)
     data: Mapped[str] = mapped_column(String(512), nullable=True, default=None)
     webhook_url: Mapped[str] = mapped_column(String(256), nullable=True, default=None)
+    api_keys: Mapped[str] = mapped_column(String(256), nullable=True, default=None)
 
     queue_list = relationship('models.queue.Queue', back_populates='task', cascade='all,delete-orphan',
                               single_parent=True, lazy='subquery', passive_deletes=True)

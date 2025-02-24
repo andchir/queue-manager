@@ -20,7 +20,7 @@ from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseIt
     ResponseItemUuid, ResponseProxyItems, DataResponseDeletedSuccess
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
 from utils.restore_outdated_queue_items import restore_outdated_queue_items
-from utils.security import check_authentication_header
+from utils.security import check_authentication_header, check_authentication_header_task
 from utils.upload_file import upload_file, delete_old_files
 from utils.webhook import webhook_post_result
 from config import settings
@@ -40,6 +40,8 @@ def read_root():
 def create_task_action(task: TaskAddSchema) -> Union[ResponseItemId, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
+        if settings.use_task_api_keys:
+            task.api_keys = str(uuid.uuid4())
         task = task_repository.add_one(task.model_dump())
 
     return {
@@ -50,10 +52,13 @@ def create_task_action(task: TaskAddSchema) -> Union[ResponseItemId, dict]:
 
 
 @router.patch('/tasks/{task_id}', name='Update Task', tags=['Tasks'],
-              dependencies=[Depends(check_authentication_header)])
+              dependencies=[Depends(check_authentication_header_task)])
 def update_task_action(task: TaskUpdateSchema, task_id: int) -> Union[TaskSchema, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
+        if settings.use_task_api_keys:
+            task = task_repository.find_one(task_id)
+            print(task)
         try:
             res = task_repository.update_one(task.model_dump(exclude_unset=True), task_id)
         except NoResultFound:

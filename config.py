@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     ws_port: int = 8765
     tg_bot_token: str = ''
     tg_chat_id: str = ''
+    use_task_api_keys: bool = False
 
     class Config:
         env_file = '.env'
