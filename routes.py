@@ -17,7 +17,7 @@ from repositories.tasks_repository import TasksRepository
 from schemas.proxy_schema import ProxySchema, ProxyAddSchema
 from schemas.queue_schema import QueueAddSchema, QueueUpdateSchema, QueueSchema, QueueResultSchema, QueueSizeSchema
 from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseItemId, ResponseQueueItems, \
-    ResponseItemUuid, ResponseProxyItems, DataResponseDeletedSuccess
+    ResponseItemUuid, ResponseProxyItems, DataResponseDeletedSuccess, ResponseItemTask
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
 from utils.restore_outdated_queue_items import restore_outdated_queue_items
 from utils.security import check_authentication_header, check_authentication_header_task
@@ -37,28 +37,39 @@ def read_root():
 
 @router.post('/tasks', name='Create Task', tags=['Tasks'],
              dependencies=[Depends(check_authentication_header)])
-def create_task_action(task: TaskAddSchema) -> Union[ResponseItemId, dict]:
+def create_task_action(task: TaskAddSchema) -> Union[ResponseItemTask, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
+        api_keys = None
         if settings.use_task_api_keys:
-            task.api_keys = str(uuid.uuid4())
-        task = task_repository.add_one(task.model_dump())
+            api_keys = str(uuid.uuid4())
+        task = task_repository.add_one(task.model_dump(), api_keys=api_keys)
 
-    return {
+    output = {
         'success': True,
         'item_id': task.id,
         'item_uuid': task.uuid
     }
+    if settings.use_task_api_keys:
+        output['api_keys'] = task.api_keys
+    return output
 
 
 @router.patch('/tasks/{task_id}', name='Update Task', tags=['Tasks'],
               dependencies=[Depends(check_authentication_header_task)])
-def update_task_action(task: TaskUpdateSchema, task_id: int) -> Union[TaskSchema, dict]:
+def update_task_action(request: Request, task: TaskUpdateSchema, task_id: int) -> Union[TaskUpdateSchema, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
         if settings.use_task_api_keys:
-            task = task_repository.find_one(task_id)
-            print(task)
+            task_current = task_repository.find_one(task_id)
+            if settings.use_task_api_keys:
+                api_keys = task_current.api_keys.split(',')
+                header_api_key = request.headers['api-key'] if 'api-key' in dict(request.headers) else ''
+                if header_api_key not in api_keys:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail='Invalid API Key.',
+                    )
         try:
             res = task_repository.update_one(task.model_dump(exclude_unset=True), task_id)
         except NoResultFound:
@@ -111,7 +122,7 @@ def delete_task_action(task_id: int) -> Union[DataResponseSuccess, dict]:
 
 
 @router.post('/queue/{task_uuid}', name='Create Queue Item', tags=['Queue'],
-             dependencies=[Depends(check_authentication_header)])
+             dependencies=[Depends(check_authentication_header_task)])
 async def create_queue_action(
         request: Request,
         task_uuid: str,
@@ -189,6 +200,14 @@ async def create_queue_action(
     with session_maker() as session:
         task_repository = TasksRepository(session)
         task = task_repository.find_one_by_uuid(task_uuid)
+        if settings.use_task_api_keys:
+            api_keys = task.api_keys.split(',')
+            header_api_key = request.headers['api-key'] if 'api-key' in dict(request.headers) else ''
+            if header_api_key not in api_keys:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail='Invalid API Key.',
+                )
 
         if task is not None:
             queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, user_id=user_id, **data)

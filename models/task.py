@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.db import Base
 import uuid
 
-from schemas.task_schema import TaskSchema
+from schemas.task_schema import TaskDetailedSchema
 
 
 def generate_uuid():
@@ -26,8 +26,8 @@ class Task(Base):
     queue_list = relationship('models.queue.Queue', back_populates='task', cascade='all,delete-orphan',
                               single_parent=True, lazy='subquery', passive_deletes=True)
 
-    def to_read_model(self) -> TaskSchema:
-        return TaskSchema(
+    def to_read_model(self) -> TaskDetailedSchema:
+        return TaskDetailedSchema(
             id=self.id,
             uuid=self.uuid,
             name=self.name,
@@ -35,5 +35,6 @@ class Task(Base):
             owner=self.owner,
             data=self.data,
             webhook_url=self.webhook_url,
+            api_keys=self.api_keys,
             queue_list=self.queue_list
         )

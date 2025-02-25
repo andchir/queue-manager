@@ -58,6 +58,16 @@ class ResponseItemId(BaseModel):
         from_attributes = True
 
 
+class ResponseItemTask(BaseModel):
+    success: bool
+    item_id: int
+    item_uuid: str
+    api_keys: str
+
+    class Config:
+        from_attributes = True
+
+
 class ResponseItemUuid(BaseModel):
     success: bool
     uuid: str
