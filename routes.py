@@ -60,16 +60,6 @@ def create_task_action(task: TaskAddSchema) -> Union[ResponseItemTask, dict]:
 def update_task_action(request: Request, task: TaskUpdateSchema, task_id: int) -> Union[TaskUpdateSchema, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
-        if settings.use_task_api_keys:
-            task_current = task_repository.find_one(task_id)
-            if settings.use_task_api_keys:
-                api_keys = task_current.api_keys.split(',')
-                header_api_key = request.headers['api-key'] if 'api-key' in dict(request.headers) else ''
-                if header_api_key not in api_keys:
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail='Invalid API Key.',
-                    )
         try:
             res = task_repository.update_one(task.model_dump(exclude_unset=True), task_id)
         except NoResultFound:
@@ -200,16 +190,17 @@ async def create_queue_action(
     with session_maker() as session:
         task_repository = TasksRepository(session)
         task = task_repository.find_one_by_uuid(task_uuid)
-        if settings.use_task_api_keys:
-            api_keys = task.api_keys.split(',')
-            header_api_key = request.headers['api-key'] if 'api-key' in dict(request.headers) else ''
-            if header_api_key not in api_keys:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail='Invalid API Key.',
-                )
 
         if task is not None:
+            if settings.use_task_api_keys:
+                api_keys = task.api_keys.split(',')
+                header_api_key = request.headers['api-key'] if 'api-key' in dict(request.headers) else ''
+                if header_api_key not in api_keys:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail='Invalid API Key.',
+                    )
+
             queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, user_id=user_id, **data)
             queue_repository = QueueRepository(session)
             queue_item = queue_repository.add_one(queue_item_new.model_dump(), item_uuid=item_uuid)
