@@ -56,7 +56,7 @@ def create_task_action(task: TaskAddSchema) -> Union[ResponseItemTask, dict]:
 
 
 @router.patch('/tasks/{task_id}', name='Update Task', tags=['Tasks'],
-              dependencies=[Depends(check_authentication_header_task)])
+              dependencies=[Depends(check_authentication_header)])
 def update_task_action(request: Request, task: TaskUpdateSchema, task_id: int) -> Union[TaskUpdateSchema, dict]:
     with session_maker() as session:
         task_repository = TasksRepository(session)
