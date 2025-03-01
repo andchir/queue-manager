@@ -1,0 +1,7 @@
+requests==2.32.3
+pydantic-settings==2.8.1
+fastapi==0.115.10
+filetype==1.2.0
+pydub==0.25.1
+ffmpeg==1.4
+yadisk==3.2.0
