@@ -29,6 +29,8 @@ def upload_file(file: UploadFile, dir_path: str, type='image'):
 
 
 def upload_from_url(dir_path: str, file_url: str, type='image'):
+    if not os.path.isdir(os.path.dirname(dir_path)):
+        os.mkdir(os.path.dirname(dir_path))
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path)
 
