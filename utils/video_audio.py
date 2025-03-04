@@ -23,6 +23,19 @@ def get_audio_duration(file_path, use_ceil=True):
     return math.ceil(audio.duration_seconds) if use_ceil else int(audio.duration_seconds)
 
 
+def get_video_duration(file_path, use_ceil=True):
+    try:
+        probe = ffmpeg.probe(file_path)
+    except ffmpeg.Error as e:
+        print(str(e))
+        return 0
+    video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
+    if video_stream is None:
+        return 0
+    video_duration = float(video_stream['duration'])
+    return math.ceil(video_duration) if use_ceil else video_duration
+
+
 def video_create_duration(file_path, target_duration, start_time=0):
     try:
         probe = ffmpeg.probe(file_path)
