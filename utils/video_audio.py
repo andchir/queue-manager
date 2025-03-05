@@ -23,7 +23,7 @@ def get_audio_duration(file_path, use_ceil=True):
     return math.ceil(audio.duration_seconds) if use_ceil else int(audio.duration_seconds)
 
 
-def get_video_duration(file_path, use_ceil=True):
+def get_video_duration(file_path, use_ceil=True, get_fps=False):
     try:
         probe = ffmpeg.probe(file_path)
     except ffmpeg.Error as e:
@@ -33,7 +33,16 @@ def get_video_duration(file_path, use_ceil=True):
     if video_stream is None:
         return 0
     video_duration = float(video_stream['duration'])
-    return math.ceil(video_duration) if use_ceil else video_duration
+    video_fps = 25
+    if use_ceil:
+        video_duration = math.ceil(video_duration)
+    if get_fps:
+        r_frame_rate = video_stream['r_frame_rate'] if 'r_frame_rate' in video_stream else ''
+        if '/' in r_frame_rate:
+            tmp = r_frame_rate.split('/')
+            video_fps = int(tmp[0]) / int(tmp[1])
+        return video_duration, video_fps
+    return video_duration
 
 
 def video_create_duration(file_path, target_duration, start_time=0):
