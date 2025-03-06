@@ -1,12 +1,22 @@
 from PIL import Image, ImageOps
 
 
-def image_resize(image_path, base_width=2000, up_scale=False, return_size=False):
+def image_get_size(image_path):
+    ext = image_path.split('.')[-1]
+    if ext not in ['jpg', 'jpeg', 'png']:
+        return 0
     img = Image.open(image_path)
+    img = ImageOps.exif_transpose(img)
+    width, height = img.size
+    return [width, height]
+
+
+def image_resize(image_path, base_width=2000, up_scale=False, return_size=False):
     ext = image_path.split('.')[-1]
     if ext not in ['jpg', 'jpeg', 'png']:
         return (image_path, []) if return_size else image_path
 
+    img = Image.open(image_path)
     img = ImageOps.exif_transpose(img)
 
     width, height = img.size
