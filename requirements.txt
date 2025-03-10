@@ -38,3 +38,5 @@ supervisor==4.2.5
 yadisk==3.1.0
 ffmpeg-python==0.2.0
 PyMySQL==1.1.1
+rich==13.9.4
+psutil==7.0.0
