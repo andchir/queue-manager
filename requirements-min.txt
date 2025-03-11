@@ -7,3 +7,4 @@ ffmpeg-python==0.2.0
 yadisk==3.2.0
 rich==13.9.4
 psutil==7.0.0
+pynvml==12.0.0
