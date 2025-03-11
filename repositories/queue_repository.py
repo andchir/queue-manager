@@ -20,10 +20,13 @@ class QueueRepository(SQLAlchemyRepository):
             return None
         return result
 
-    def get_count_by_task_id(self, status, task_id):
+    def get_count_by_task_id(self, status_list, task_id):
         try:
             stmt = (select(func.count())
-                    .where(self.model.task_id == task_id, self.model.status == status)
+                    .where(
+                self.model.task_id == task_id,
+                            self.model.status.in_(status_list)
+                    )
                     .order_by(self.model.id))
             result = self.session.execute(stmt).scalar()
         except NoResultFound:

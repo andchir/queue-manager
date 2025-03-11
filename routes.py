@@ -258,7 +258,7 @@ def get_queue_size_action(task_uuid: str) -> Union[QueueSizeSchema, dict]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Task not found.')
 
         queue_repository = QueueRepository(session)
-        queue_size = queue_repository.get_count_by_task_id(QueueStatus.PENDING.value, task_id=task.id)
+        queue_size = queue_repository.get_count_by_task_id([QueueStatus.PENDING.value, QueueStatus.PROCESSING.value], task_id=task.id)
 
     return {'queue_size': queue_size}
 
