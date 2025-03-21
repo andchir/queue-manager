@@ -53,7 +53,14 @@ async def main(port=8765):
     stop = loop.create_future()
     loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
 
-    async with websockets.serve(register, host='', port=port, reuse_port=True):
+    async with websockets.serve(
+        register,
+        host='',
+        port=port,
+        reuse_port=True,
+        ping_interval=60,
+        ping_timeout=90
+    ):
         await asyncio.Future()  # Run forever
 
 
