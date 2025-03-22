@@ -7,46 +7,65 @@ import asyncio
 import signal
 import json
 import websockets
+import logging
+from typing import Dict, Optional
+from dataclasses import dataclass
 
-CONNECTIONS = {}
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+CONNECTIONS: Dict[str, websockets.WebSocketServerProtocol] = {}
+
+@dataclass
+class WebSocketMessage:
+    recipient_uuid: Optional[str] = None
+    message: Optional[str] = None
 
 
 async def register(websocket):
-    tmp_uuid = str(uuid.uuid1())
-    print('New connection', tmp_uuid)
-    CONNECTIONS['tmp_' + tmp_uuid] = websocket
-    print('Connections total:', len(CONNECTIONS))
-    await websocket.send('..:: Hello from the Notification Center ::..')
+    tmp_uuid = str(uuid.uuid4())
+    logger.info(f'New connection: {tmp_uuid}')
+    CONNECTIONS[f'tmp_{tmp_uuid}'] = websocket
+    logger.info(f'Connections total: {len(CONNECTIONS)}')
+
     try:
+        await websocket.send('..:: Hello from the Notification Center ::..')
         async for message in websocket:
-            event = json.loads(message) if message.startswith('{') else message
-            recipient_uuid = event['recipient_uuid'] if 'recipient_uuid' in event else None
-            message = event['message'] if 'message' in event else ''
-            if message == 'connected' and recipient_uuid:
-                print('Set UUID:', recipient_uuid)
-                CONNECTIONS[recipient_uuid] = websocket
-                del CONNECTIONS['tmp_' + tmp_uuid]
-            else:
-                print('Message', event)
-                if recipient_uuid is not None and recipient_uuid in CONNECTIONS:
-                    await CONNECTIONS[recipient_uuid].send(message)
+            try:
+                event = json.loads(message) if message.startswith('{') else WebSocketMessage(message=message)
+
+                if isinstance(event, dict):
+                    event = WebSocketMessage(**event)
+
+                if event.message == 'connected' and event.recipient_uuid:
+                    logger.info(f'Set UUID: {event.recipient_uuid}')
+                    CONNECTIONS[event.recipient_uuid] = websocket
+                    del CONNECTIONS[f'tmp_{tmp_uuid}']
                 else:
-                    print(recipient_uuid, 'Connection not found.')
-                    print()
+                    logger.info(f'Message: {event}')
+                    if event.recipient_uuid and event.recipient_uuid in CONNECTIONS:
+                        await CONNECTIONS[event.recipient_uuid].send(event.message)
+                    else:
+                        logger.warning(f'Connection not found for UUID: {event.recipient_uuid}')
+            except json.JSONDecodeError as e:
+                logger.error(f'JSON decode error: {e}')
+            except Exception as e:
+                logger.error(f'Error processing message: {e}')
+
     finally:
-        print('Disconnected', tmp_uuid)
-        if 'tmp_' + tmp_uuid in CONNECTIONS:
-            del CONNECTIONS['tmp_' + tmp_uuid]
+        logger.info(f'Disconnected: {tmp_uuid}')
+        if f'tmp_{tmp_uuid}' in CONNECTIONS:
+            del CONNECTIONS[f'tmp_{tmp_uuid}']
         else:
             for key, con in CONNECTIONS.items():
                 if con == websocket:
                     del CONNECTIONS[key]
                     break
-        print('Connections total:', len(CONNECTIONS))
+        logger.info(f'Connections total: {len(CONNECTIONS)}')
 
 
 async def main(port=8765):
-    print('Starting WebSocket server')
+    logger.info('Starting WebSocket server')
 
     # Set the stop condition when receiving SIGTERM.
     loop = asyncio.get_running_loop()
@@ -61,7 +80,7 @@ async def main(port=8765):
         ping_interval=60,
         ping_timeout=90
     ):
-        await asyncio.Future()  # Run forever
+        await stop  # Waiting for SIGTERM signal to terminate
 
 
 if __name__ == "__main__":
