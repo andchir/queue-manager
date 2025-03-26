@@ -44,6 +44,10 @@ sqlite3 app_database.db
 
 repacking it into a minimal amount of disk space:
 VACUUM;
+
+# Add index by uuid:
+EXPLAIN SELECT * FROM queue WHERE uuid = '6360a287-cce3-44c8-a1ef-7c8d84f7dc5c';
+CREATE INDEX queue_uuid ON queue(uuid);
 ~~~
 
 Update Python sqlite3 module:
