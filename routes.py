@@ -289,7 +289,7 @@ def get_queue_next_action(task_uuid: str, user_ip: str = Header(None, alias='X-R
             result.pending = len(list(queue_list))
 
             return result
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Queue item not found.')
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='There are no items in the queue.')
 
 
 @router.post('/queue_result/{uuid}', name='Send Queue Item result', tags=['Queue'])
