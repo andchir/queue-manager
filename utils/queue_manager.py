@@ -21,7 +21,11 @@ def send_queue_result(queue_uuid, result_str, key='result'):
     payload = {
         'result_data': dict(zip([key], [result_str]))
     }
-    r = requests.post(url=queue_url, json=payload)
+    try:
+        r = requests.post(url=queue_url, json=payload)
+    except Exception as e:
+        print(e)
+        return None
     return r.json()
 
 
@@ -30,14 +34,22 @@ def send_queue_result_dict(queue_uuid, result_dict):
     payload = {
         'result_data': result_dict
     }
-    r = requests.post(url=queue_url, json=payload)
+    try:
+        r = requests.post(url=queue_url, json=payload)
+    except Exception as e:
+        print(e)
+        return None
     return r.json()
 
 
 def send_queue_error(queue_uuid, message):
     queue_url = 'https://{}/queue_error/{}'.format(settings.app_server_name, queue_uuid)
     payload = {'message': message}
-    r = requests.post(url=queue_url, data=payload)
+    try:
+        r = requests.post(url=queue_url, data=payload)
+    except Exception as e:
+        print(e)
+        return None
     return r.json()
 
 
