@@ -4,7 +4,11 @@ import requests
 
 def upload_to_vk(file_path, upload_url):
     with open(file_path, 'rb') as file:
-        resp = requests.post(upload_url, files={'file': file})
+        try:
+            resp = requests.post(upload_url, files={'file': file})
+        except Exception as e:
+            print(e)
+            return None
     return resp.json()
 
 
