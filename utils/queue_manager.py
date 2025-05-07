@@ -1,8 +1,20 @@
+import json
+
 import requests
 import time
-
 from config import settings
 from utils.upload_file import upload_from_url
+
+
+def is_json(json_str: str) -> bool:
+    json_str = json_str.strip()
+    # if not re.fullmatch(r'^(\[.*\]|\{.*\})$', json_str):
+    #     return False
+    try:
+        json.loads(json_str)
+        return True
+    except ValueError:
+        return False
 
 
 def get_queue_next(task_uuid):
