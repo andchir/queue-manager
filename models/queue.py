@@ -47,6 +47,7 @@ class Queue(Base):
             owner=self.owner,
             data=self.data,
             result_data=self.result_data,
+            headers=self.headers,
             time_created=self.time_created.strftime('%Y-%m-%d %H:%M:%S') if isinstance(self.time_created, datetime.datetime) else self.time_created,
             time_updated=self.time_updated.strftime('%Y-%m-%d %H:%M:%S') if isinstance(self.time_updated, datetime.datetime) else self.time_updated,
             user_id=self.user_id

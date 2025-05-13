@@ -10,6 +10,7 @@ class QueueSchema(BaseModel):
     owner: str | None = None
     data: dict | None = None
     result_data: dict | None = None
+    headers: dict | None = None
     time_created: str | datetime | None = None
     time_updated: str | datetime | None = None
     user_id: int | None = None
@@ -28,6 +29,7 @@ class QueueDetailedSchema(BaseModel):
     owner: str | None = None
     data: dict | None = None
     result_data: dict | None = None
+    headers: dict | None = None
     user_id: int | None = None
 
     class Config:
