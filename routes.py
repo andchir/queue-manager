@@ -187,6 +187,13 @@ async def create_queue_action(
     if not user_id:
         user_id = 0
 
+    headers_data = {}
+    for key, val in request.headers.items():
+        if 'sec-' in key or key in ('api-key', 'api_key', 'x-api-key', 'content-type', 'content-length', 'origin',
+                                    'cookie', 'host', 'referer', 'authorization'):
+            continue
+        headers_data[key] = val
+
     with session_maker() as session:
         task_repository = TasksRepository(session)
         task = task_repository.find_one_by_uuid(task_uuid)
@@ -201,7 +208,8 @@ async def create_queue_action(
                         detail='Invalid API Key.',
                     )
 
-            queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, user_id=user_id, **data)
+            queue_item_new = QueueAddSchema(status=QueueStatus.PENDING.value, task_id=task.id, user_id=user_id,
+                                            headers=headers_data, **data)
             queue_repository = QueueRepository(session)
             queue_item = queue_repository.add_one(queue_item_new.model_dump(), item_uuid=item_uuid)
             return {

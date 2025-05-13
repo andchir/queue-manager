@@ -40,6 +40,7 @@ class QueueAddSchema(BaseModel):
     owner: str | None = None
     data: dict | None = None
     result_data: dict | None = None
+    headers: dict | None = None
     user_id: int | None = None
 
     class Config:

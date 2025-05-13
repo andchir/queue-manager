@@ -29,6 +29,7 @@ class Queue(Base):
     status: Mapped[str] = mapped_column(String(30))  # pending, processing, canceled, completed, error
     data: Mapped[dict] = mapped_column(JSON(none_as_null=True), nullable=True, default=None)
     result_data: Mapped[dict] = mapped_column(JSON(none_as_null=True), nullable=True, default=None)
+    headers: Mapped[dict] = mapped_column(JSON(none_as_null=True), nullable=True, default=None)
     owner: Mapped[str] = mapped_column(String(256), nullable=True, default=None)
     time_created: Mapped[str] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
     time_updated: Mapped[str] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
