@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     ws_port: int = 8765
     tg_bot_token: str = ''
     tg_chat_id: str = ''
+    bothub_api_key: str = ''
+    vsegpt_api_key: str = ''
     use_task_api_keys: bool = False
 
     class Config:
