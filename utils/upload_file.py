@@ -110,6 +110,10 @@ def validate_file_size_type(file: UploadFile = None, file_path=None, type='image
     return file_info
 
 
+def is_folder_empty(folder_path):
+    return len(os.listdir(folder_path)) == 0
+
+
 def delete_old_files(dir_path, max_hours=6):
     if not os.path.isdir(dir_path):
         return 0
@@ -118,6 +122,10 @@ def delete_old_files(dir_path, max_hours=6):
     deleted = 0
     for file in files_list:
         if not os.path.isfile(os.path.join(dir_path, file)):
+            if os.path.isdir(os.path.join(dir_path, file)):
+                deleted += delete_old_files(os.path.join(dir_path, file), max_hours)
+                if is_folder_empty(os.path.join(dir_path, file)):
+                    os.rmdir(os.path.join(dir_path, file))
             continue
         mtime = datetime.fromtimestamp(os.stat(os.path.join(dir_path, file)).st_mtime)
         diff = now - mtime
