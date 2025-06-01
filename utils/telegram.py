@@ -2,7 +2,7 @@ import requests
 from config import settings
 
 
-def send_message_to_bot(message, max_length=3072):
+def send_message_to_bot(message, max_length=3584):
     bot_token = settings.tg_bot_token
     chat_id = settings.tg_chat_id
     if not bot_token or not chat_id:
