@@ -3,6 +3,7 @@ import sys
 import yadisk
 import datetime
 import sys
+import time
 
 sys.path.append(os.path.abspath('.'))
 from config import settings
@@ -28,6 +29,7 @@ def upload_and_share_file(file_path: str, dir_path: str, type='image', attempt=1
         except Exception as e:
             print(e)
             if attempt <= max_attempts:
+                time.sleep(2)
                 attempt += 1
                 return upload_and_share_file(file_path, dir_path, type, attempt=attempt)
             return None, None
