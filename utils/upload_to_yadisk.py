@@ -77,6 +77,7 @@ def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=6):
 
 
 if __name__ == '__main__':
+    # https://oauth.yandex.ru/
     dir_path = 'api2app/media'
     file_path = '/media/andrew/KINGSTON/images/rocket.png'
     # file_path = '/media/andrew/KINGSTON/video/River - 131339.mp4'
