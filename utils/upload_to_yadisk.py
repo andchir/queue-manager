@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath('.'))
 from config import settings
 
 
-def upload_and_share_file(file_path: str, dir_path: str, type='image'):
+def upload_and_share_file(file_path: str, dir_path: str, type='image', attempt=1, max_attempts=3):
     client = yadisk.Client(token=settings.yadisk_token)
 
     with client:
@@ -27,6 +27,9 @@ def upload_and_share_file(file_path: str, dir_path: str, type='image'):
                 result = client.upload(file_path, f'{dir_path}/{base_name}', overwrite=True, timeout=3600)
         except Exception as e:
             print(e)
+            if attempt <= max_attempts:
+                attempt += 1
+                return upload_and_share_file(file_path, dir_path, type, attempt=attempt)
             return None, None
 
         if result is None or not hasattr(result, 'path'):
