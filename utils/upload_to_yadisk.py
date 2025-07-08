@@ -52,7 +52,7 @@ def upload_and_share_file(file_path: str, dir_path: str, type='image', attempt=1
         return meta.file, meta.public_url
 
 
-def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=6):
+def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=12, all=False):
     now = datetime.datetime.now(datetime.timezone.utc)
     client = yadisk.Client(token=settings.yadisk_token)
     with client:
@@ -61,6 +61,8 @@ def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=6):
         # print('used_space:', info.used_space)
         # print('total_space:', info.total_space)
         # print(info)
+        print('offset:', offset)
+        print('limit:', limit)
         try:
             files_list = list(client.listdir(dir_path, offset=offset, limit=limit, fields=[
                 'path', 'resource_id', 'file', 'size', 'created', 'media_type'], timeout=30, max_items=limit, n_retries=3))
@@ -78,7 +80,10 @@ def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=6):
         print(f'Deleted {count} files in {dir_path}.')
         print('Emptying the trash bin...')
         client.remove_trash('/')
-        print('Success!')
+        print('Success!\n')
+        if all and len(files_list) > 0:
+            offset += limit
+            delete_old_files_yadisk(dir_path, offset=offset, limit=limit, max_hours=max_hours, all=True)
 
 
 if __name__ == '__main__':
@@ -92,7 +97,7 @@ if __name__ == '__main__':
     limit = int(args[2]) if len(args) > 2 else 100
     print(action, offset, limit)
     if action == 'delete_old_files':
-        delete_old_files_yadisk(dir_path, offset=offset, limit=limit)
+        delete_old_files_yadisk(dir_path, offset=offset, limit=limit, all=True)
     else:
         print('Uploading...')
         file_url, public_url = upload_and_share_file(file_path, dir_path)
