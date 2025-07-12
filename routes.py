@@ -491,3 +491,43 @@ async def proxy_post_action(uuid: str, request: Request) -> Union[DataResponseSu
         raise HTTPException(status_code=status_code, detail=resp_content, headers=resp_headers)
 
     return resp_content if type(resp_content) is dict else {'result': resp_content}
+
+
+@router.get('/proxy_get/{uuid}', name='Proxy GET request', tags=['Proxy'],
+            dependencies=[Depends(check_authentication_header)])
+async def proxy_get_action(uuid: str, request: Request) -> Union[DataResponseSuccess, dict]:
+
+    with session_maker() as session:
+        repository = ProxyRepository(session)
+        proxy_item = repository.find_one_by_uuid(uuid)
+
+    if proxy_item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with UUID {uuid} not found.')
+
+    req_headers = dict(request.headers)
+    query_params = dict(request.query_params)
+    request_url = proxy_item.url
+
+    headers = {
+        'Content-Type': req_headers['content-type'] if 'content-type' in req_headers else 'application/json'
+    }
+    if 'authorization' in req_headers:
+        headers['Authorization'] = req_headers['authorization']
+
+    response = requests.request('get', request_url, headers=headers, params=query_params, verify=True)
+
+    status_code = int(response.status_code)
+    try:
+        resp_content = response.content.decode('utf-8')
+    except Exception as e:
+        print(str(e))
+        resp_content = 'Error.'
+
+    resp_headers = dict(response.headers)
+    if 'Content-Length' in resp_headers:
+        del resp_headers['Content-Length']
+
+    if status_code != 200:
+        raise HTTPException(status_code=status_code, detail=resp_content, headers=resp_headers)
+
+    return resp_content if type(resp_content) is dict else {'result': resp_content}
