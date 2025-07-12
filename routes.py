@@ -523,6 +523,9 @@ async def proxy_get_action(uuid: str, request: Request) -> Union[DataResponseSuc
         print(str(e))
         resp_content = 'Error.'
 
+    if resp_content.startswith('{'):
+        resp_content = json.loads(resp_content)
+
     resp_headers = dict(response.headers)
     if 'Content-Length' in resp_headers:
         del resp_headers['Content-Length']
