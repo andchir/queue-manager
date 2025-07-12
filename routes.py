@@ -478,7 +478,7 @@ async def proxy_post_action(uuid: str, request: Request) -> Union[DataResponseSu
         print(str(e))
         resp_content = 'Error.'
 
-    if resp_content.startswith('{'):
+    if resp_content.startswith('{') or resp_content.startswith('['):
         resp_content = json.loads(resp_content)
 
     resp_content_type = response.headers['Content-Type'] if 'Content-Type' in response.headers else None
@@ -523,7 +523,7 @@ async def proxy_get_action(uuid: str, request: Request) -> Union[DataResponseSuc
         print(str(e))
         resp_content = 'Error.'
 
-    if resp_content.startswith('{'):
+    if resp_content.startswith('{') or resp_content.startswith('['):
         resp_content = json.loads(resp_content)
 
     resp_headers = dict(response.headers)
