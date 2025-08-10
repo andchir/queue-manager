@@ -40,6 +40,7 @@ class TaskAddSchema(BaseModel):
 
 class TaskUpdateSchema(BaseModel):
     name: str | None = None
+    uuid: str | None = None
     title: str | None = None
     owner: str | None = None
     data: str | None = None
