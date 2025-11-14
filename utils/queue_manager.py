@@ -17,10 +17,10 @@ def is_json(json_str: str) -> bool:
         return False
 
 
-def get_queue_next(task_uuid):
+def get_queue_next(task_uuid, timeout=30):
     queue_url = 'https://{}/queue_next/{}'.format(settings.app_server_name, task_uuid)
     try:
-        r = requests.get(url=queue_url)
+        r = requests.get(url=queue_url, timeout=timeout)
     except Exception as e:
         print(str(e))
         return None
@@ -28,37 +28,37 @@ def get_queue_next(task_uuid):
     return result if result and 'data' in result else None
 
 
-def send_queue_result(queue_uuid, result_str, key='result'):
+def send_queue_result(queue_uuid, result_str, key='result', timeout=30):
     queue_url = 'https://{}/queue_result/{}'.format(settings.app_server_name, queue_uuid)
     payload = {
         'result_data': dict(zip([key], [result_str]))
     }
     try:
-        r = requests.post(url=queue_url, json=payload)
+        r = requests.post(url=queue_url, json=payload, timeout=timeout)
     except Exception as e:
         print(e)
         return None
     return r.json()
 
 
-def send_queue_result_dict(queue_uuid, result_dict):
+def send_queue_result_dict(queue_uuid, result_dict, timeout=30):
     queue_url = 'https://{}/queue_result/{}'.format(settings.app_server_name, queue_uuid)
     payload = {
         'result_data': result_dict
     }
     try:
-        r = requests.post(url=queue_url, json=payload)
+        r = requests.post(url=queue_url, json=payload, timeout=timeout)
     except Exception as e:
         print(e)
         return None
     return r.json()
 
 
-def send_queue_error(queue_uuid, message):
+def send_queue_error(queue_uuid, message, timeout=30):
     queue_url = 'https://{}/queue_error/{}'.format(settings.app_server_name, queue_uuid)
     payload = {'message': message}
     try:
-        r = requests.post(url=queue_url, data=payload)
+        r = requests.post(url=queue_url, data=payload, timeout=timeout)
     except Exception as e:
         print(e)
         return None
