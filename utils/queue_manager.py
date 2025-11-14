@@ -37,6 +37,16 @@ def send_queue_result(queue_uuid, result_str, key='result', timeout=30, retry_de
     for attempt in range(max_retries + 1):
         try:
             r = requests.post(url=queue_url, json=payload, timeout=timeout)
+            # Check if the status code indicates an error (4xx or 5xx)
+            if r.status_code >= 400:
+                error_msg = f'HTTP error {r.status_code}'
+                if attempt < max_retries:
+                    print(f'Error sending queue result (attempt {attempt + 1}/{max_retries + 1}): {error_msg}. Retrying in {retry_delay} seconds...')
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    print(f'Error sending queue result (final attempt): {error_msg}')
+                    return None
             return r.json()
         except Exception as e:
             if attempt < max_retries:
@@ -56,6 +66,16 @@ def send_queue_result_dict(queue_uuid, result_dict, timeout=30, retry_delay=20, 
     for attempt in range(max_retries + 1):
         try:
             r = requests.post(url=queue_url, json=payload, timeout=timeout)
+            # Check if the status code indicates an error (4xx or 5xx)
+            if r.status_code >= 400:
+                error_msg = f'HTTP error {r.status_code}'
+                if attempt < max_retries:
+                    print(f'Error sending queue result dict (attempt {attempt + 1}/{max_retries + 1}): {error_msg}. Retrying in {retry_delay} seconds...')
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    print(f'Error sending queue result dict (final attempt): {error_msg}')
+                    return None
             return r.json()
         except Exception as e:
             if attempt < max_retries:
@@ -73,6 +93,16 @@ def send_queue_error(queue_uuid, message, timeout=30, retry_delay=20, max_retrie
     for attempt in range(max_retries + 1):
         try:
             r = requests.post(url=queue_url, data=payload, timeout=timeout)
+            # Check if the status code indicates an error (4xx or 5xx)
+            if r.status_code >= 400:
+                error_msg = f'HTTP error {r.status_code}'
+                if attempt < max_retries:
+                    print(f'Error sending queue error (attempt {attempt + 1}/{max_retries + 1}): {error_msg}. Retrying in {retry_delay} seconds...')
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    print(f'Error sending queue error (final attempt): {error_msg}')
+                    return None
             return r.json()
         except Exception as e:
             if attempt < max_retries:
