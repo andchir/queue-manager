@@ -28,41 +28,59 @@ def get_queue_next(task_uuid, timeout=30):
     return result if result and 'data' in result else None
 
 
-def send_queue_result(queue_uuid, result_str, key='result', timeout=30):
+def send_queue_result(queue_uuid, result_str, key='result', timeout=30, retry_delay=20, max_retries=10):
     queue_url = 'https://{}/queue_result/{}'.format(settings.app_server_name, queue_uuid)
     payload = {
         'result_data': dict(zip([key], [result_str]))
     }
-    try:
-        r = requests.post(url=queue_url, json=payload, timeout=timeout)
-    except Exception as e:
-        print(e)
-        return None
-    return r.json()
+
+    for attempt in range(max_retries + 1):
+        try:
+            r = requests.post(url=queue_url, json=payload, timeout=timeout)
+            return r.json()
+        except Exception as e:
+            if attempt < max_retries:
+                print(f'Error sending queue result (attempt {attempt + 1}/{max_retries + 1}): {e}. Retrying in {retry_delay} seconds...')
+                time.sleep(retry_delay)
+            else:
+                print(f'Error sending queue result (final attempt): {e}')
+                return None
 
 
-def send_queue_result_dict(queue_uuid, result_dict, timeout=30):
+def send_queue_result_dict(queue_uuid, result_dict, timeout=30, retry_delay=20, max_retries=10):
     queue_url = 'https://{}/queue_result/{}'.format(settings.app_server_name, queue_uuid)
     payload = {
         'result_data': result_dict
     }
-    try:
-        r = requests.post(url=queue_url, json=payload, timeout=timeout)
-    except Exception as e:
-        print(e)
-        return None
-    return r.json()
+
+    for attempt in range(max_retries + 1):
+        try:
+            r = requests.post(url=queue_url, json=payload, timeout=timeout)
+            return r.json()
+        except Exception as e:
+            if attempt < max_retries:
+                print(f'Error sending queue result dict (attempt {attempt + 1}/{max_retries + 1}): {e}. Retrying in {retry_delay} seconds...')
+                time.sleep(retry_delay)
+            else:
+                print(f'Error sending queue result dict (final attempt): {e}')
+                return None
 
 
-def send_queue_error(queue_uuid, message, timeout=30):
+def send_queue_error(queue_uuid, message, timeout=30, retry_delay=20, max_retries=10):
     queue_url = 'https://{}/queue_error/{}'.format(settings.app_server_name, queue_uuid)
     payload = {'message': message}
-    try:
-        r = requests.post(url=queue_url, data=payload, timeout=timeout)
-    except Exception as e:
-        print(e)
-        return None
-    return r.json()
+
+    for attempt in range(max_retries + 1):
+        try:
+            r = requests.post(url=queue_url, data=payload, timeout=timeout)
+            return r.json()
+        except Exception as e:
+            if attempt < max_retries:
+                print(f'Error sending queue error (attempt {attempt + 1}/{max_retries + 1}): {e}. Retrying in {retry_delay} seconds...')
+                time.sleep(retry_delay)
+            else:
+                print(f'Error sending queue error (final attempt): {e}')
+                return None
 
 
 def polling_queue(item_uuid, callback_func, interval_sec=10):
