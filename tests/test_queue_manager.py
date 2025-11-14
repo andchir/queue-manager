@@ -15,6 +15,9 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+# Mock the upload_file module to avoid pydub dependency issues
+sys.modules['utils.upload_file'] = MagicMock()
+
 from utils.queue_manager import (
     get_queue_next,
     send_queue_result,
@@ -221,6 +224,386 @@ class TestQueueManagerTimeoutValues(unittest.TestCase):
 
         call_args = mock_post.call_args
         self.assertEqual(call_args[1]['timeout'], 15)
+
+
+class TestQueueManagerRetryLogic(unittest.TestCase):
+    """Test retry logic for send functions"""
+
+    def setUp(self):
+        """Set up test fixtures"""
+        self.queue_uuid = 'test-queue-uuid-456'
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_retry_on_failure(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_result retries on failure"""
+        mock_settings.app_server_name = 'example.com'
+
+        # Simulate 2 failures then success
+        call_count = [0]
+        def side_effect(*args, **kwargs):
+            call_count[0] += 1
+            if call_count[0] <= 2:
+                raise ConnectionError("Network unreachable")
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {'status': 'ok'}
+            return mock_response
+
+        mock_post.side_effect = side_effect
+
+        result = send_queue_result(self.queue_uuid, "test result", retry_delay=1, max_retries=5)
+
+        # Should succeed after 2 retries
+        self.assertIsNotNone(result)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(call_count[0], 3)  # 2 failures + 1 success
+        self.assertEqual(mock_sleep.call_count, 2)  # 2 sleep calls
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_max_retries_exhausted(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_result returns None after exhausting retries"""
+        mock_settings.app_server_name = 'example.com'
+        mock_post.side_effect = ConnectionError("Network unreachable")
+
+        result = send_queue_result(self.queue_uuid, "test result", retry_delay=0.1, max_retries=2)
+
+        self.assertIsNone(result)
+        self.assertEqual(mock_post.call_count, 3)  # Initial + 2 retries
+        self.assertEqual(mock_sleep.call_count, 2)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    def test_send_queue_result_success_on_first_attempt(self, mock_post, mock_settings):
+        """Test that send_queue_result succeeds immediately if no error"""
+        mock_settings.app_server_name = 'example.com'
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {'status': 'ok'}
+        mock_post.return_value = mock_response
+
+        result = send_queue_result(self.queue_uuid, "test result")
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(mock_post.call_count, 1)  # Only one attempt needed
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_dict_retry_on_failure(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_result_dict retries on failure"""
+        mock_settings.app_server_name = 'example.com'
+
+        # Simulate 1 failure then success
+        call_count = [0]
+        def side_effect(*args, **kwargs):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                raise Timeout("Request timed out")
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {'status': 'ok'}
+            return mock_response
+
+        mock_post.side_effect = side_effect
+
+        result = send_queue_result_dict(self.queue_uuid, {'key': 'value'}, retry_delay=1, max_retries=5)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(call_count[0], 2)  # 1 failure + 1 success
+        self.assertEqual(mock_sleep.call_count, 1)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_dict_max_retries_exhausted(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_result_dict returns None after exhausting retries"""
+        mock_settings.app_server_name = 'example.com'
+        mock_post.side_effect = Timeout("Request timed out")
+
+        result = send_queue_result_dict(self.queue_uuid, {'key': 'value'}, retry_delay=0.1, max_retries=3)
+
+        self.assertIsNone(result)
+        self.assertEqual(mock_post.call_count, 4)  # Initial + 3 retries
+        self.assertEqual(mock_sleep.call_count, 3)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_error_retry_on_failure(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_error retries on failure"""
+        mock_settings.app_server_name = 'example.com'
+
+        # Simulate 3 failures then success
+        call_count = [0]
+        def side_effect(*args, **kwargs):
+            call_count[0] += 1
+            if call_count[0] <= 3:
+                raise RequestException("Request failed")
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {'status': 'error_logged'}
+            return mock_response
+
+        mock_post.side_effect = side_effect
+
+        result = send_queue_error(self.queue_uuid, "error message", retry_delay=1, max_retries=5)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result['status'], 'error_logged')
+        self.assertEqual(call_count[0], 4)  # 3 failures + 1 success
+        self.assertEqual(mock_sleep.call_count, 3)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_error_max_retries_exhausted(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_error returns None after exhausting retries"""
+        mock_settings.app_server_name = 'example.com'
+        mock_post.side_effect = RequestException("Request failed")
+
+        result = send_queue_error(self.queue_uuid, "error message", retry_delay=0.1, max_retries=1)
+
+        self.assertIsNone(result)
+        self.assertEqual(mock_post.call_count, 2)  # Initial + 1 retry
+        self.assertEqual(mock_sleep.call_count, 1)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_default_retry_parameters(self, mock_sleep, mock_post, mock_settings):
+        """Test that default retry parameters are 20 seconds delay and 10 retries"""
+        mock_settings.app_server_name = 'example.com'
+        mock_post.side_effect = ConnectionError("Network unreachable")
+
+        result = send_queue_result(self.queue_uuid, "test result")
+
+        # Should exhaust default 10 retries
+        self.assertIsNone(result)
+        self.assertEqual(mock_post.call_count, 11)  # Initial + 10 retries
+        self.assertEqual(mock_sleep.call_count, 10)
+
+        # Verify default delay is 20 seconds
+        for call in mock_sleep.call_args_list:
+            self.assertEqual(call[0][0], 20)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_custom_retry_delay(self, mock_sleep, mock_post, mock_settings):
+        """Test that custom retry_delay parameter works correctly"""
+        mock_settings.app_server_name = 'example.com'
+        mock_post.side_effect = ConnectionError("Network unreachable")
+
+        custom_delay = 5
+        result = send_queue_result(self.queue_uuid, "test result", retry_delay=custom_delay, max_retries=2)
+
+        self.assertIsNone(result)
+        self.assertEqual(mock_sleep.call_count, 2)
+
+        # Verify custom delay is used
+        for call in mock_sleep.call_args_list:
+            self.assertEqual(call[0][0], custom_delay)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_retry_on_http_404(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_result retries on HTTP 404 error"""
+        mock_settings.app_server_name = 'example.com'
+
+        # Simulate 2 404 errors then success
+        call_count = [0]
+        def side_effect(*args, **kwargs):
+            call_count[0] += 1
+            mock_response = Mock()
+            if call_count[0] <= 2:
+                mock_response.status_code = 404
+            else:
+                mock_response.status_code = 200
+                mock_response.json.return_value = {'status': 'ok'}
+            return mock_response
+
+        mock_post.side_effect = side_effect
+
+        result = send_queue_result(self.queue_uuid, "test result", retry_delay=1, max_retries=5)
+
+        # Should succeed after 2 retries
+        self.assertIsNotNone(result)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(call_count[0], 3)  # 2 failures + 1 success
+        self.assertEqual(mock_sleep.call_count, 2)  # 2 sleep calls
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_retry_on_http_500(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_result retries on HTTP 500 error"""
+        mock_settings.app_server_name = 'example.com'
+
+        # Simulate 1 500 error then success
+        call_count = [0]
+        def side_effect(*args, **kwargs):
+            call_count[0] += 1
+            mock_response = Mock()
+            if call_count[0] == 1:
+                mock_response.status_code = 500
+            else:
+                mock_response.status_code = 200
+                mock_response.json.return_value = {'status': 'ok'}
+            return mock_response
+
+        mock_post.side_effect = side_effect
+
+        result = send_queue_result(self.queue_uuid, "test result", retry_delay=1, max_retries=5)
+
+        # Should succeed after 1 retry
+        self.assertIsNotNone(result)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(call_count[0], 2)  # 1 failure + 1 success
+        self.assertEqual(mock_sleep.call_count, 1)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_retry_on_http_503(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_result retries on HTTP 503 (Service Unavailable) error"""
+        mock_settings.app_server_name = 'example.com'
+
+        # Simulate 3 503 errors then success
+        call_count = [0]
+        def side_effect(*args, **kwargs):
+            call_count[0] += 1
+            mock_response = Mock()
+            if call_count[0] <= 3:
+                mock_response.status_code = 503
+            else:
+                mock_response.status_code = 200
+                mock_response.json.return_value = {'status': 'ok'}
+            return mock_response
+
+        mock_post.side_effect = side_effect
+
+        result = send_queue_result(self.queue_uuid, "test result", retry_delay=1, max_retries=5)
+
+        # Should succeed after 3 retries
+        self.assertIsNotNone(result)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(call_count[0], 4)  # 3 failures + 1 success
+        self.assertEqual(mock_sleep.call_count, 3)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_dict_retry_on_http_500(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_result_dict retries on HTTP 500 error"""
+        mock_settings.app_server_name = 'example.com'
+
+        # Simulate 1 500 error then success
+        call_count = [0]
+        def side_effect(*args, **kwargs):
+            call_count[0] += 1
+            mock_response = Mock()
+            if call_count[0] == 1:
+                mock_response.status_code = 500
+            else:
+                mock_response.status_code = 200
+                mock_response.json.return_value = {'status': 'ok'}
+            return mock_response
+
+        mock_post.side_effect = side_effect
+
+        result = send_queue_result_dict(self.queue_uuid, {'key': 'value'}, retry_delay=1, max_retries=5)
+
+        # Should succeed after 1 retry
+        self.assertIsNotNone(result)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(call_count[0], 2)
+        self.assertEqual(mock_sleep.call_count, 1)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_error_retry_on_http_404(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_error retries on HTTP 404 error"""
+        mock_settings.app_server_name = 'example.com'
+
+        # Simulate 2 404 errors then success
+        call_count = [0]
+        def side_effect(*args, **kwargs):
+            call_count[0] += 1
+            mock_response = Mock()
+            if call_count[0] <= 2:
+                mock_response.status_code = 404
+            else:
+                mock_response.status_code = 200
+                mock_response.json.return_value = {'status': 'error_logged'}
+            return mock_response
+
+        mock_post.side_effect = side_effect
+
+        result = send_queue_error(self.queue_uuid, "error message", retry_delay=1, max_retries=5)
+
+        # Should succeed after 2 retries
+        self.assertIsNotNone(result)
+        self.assertEqual(result['status'], 'error_logged')
+        self.assertEqual(call_count[0], 3)
+        self.assertEqual(mock_sleep.call_count, 2)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_http_error_exhausts_retries(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_result returns None after exhausting retries on HTTP errors"""
+        mock_settings.app_server_name = 'example.com'
+
+        mock_response = Mock()
+        mock_response.status_code = 500
+        mock_post.return_value = mock_response
+
+        result = send_queue_result(self.queue_uuid, "test result", retry_delay=0.1, max_retries=2)
+
+        self.assertIsNone(result)
+        self.assertEqual(mock_post.call_count, 3)  # Initial + 2 retries
+        self.assertEqual(mock_sleep.call_count, 2)
+
+    @patch('utils.queue_manager.settings')
+    @patch('utils.queue_manager.requests.post')
+    @patch('utils.queue_manager.time.sleep')
+    def test_send_queue_result_mixed_errors(self, mock_sleep, mock_post, mock_settings):
+        """Test that send_queue_result handles both HTTP errors and exceptions"""
+        mock_settings.app_server_name = 'example.com'
+
+        # Simulate mixed errors: exception, HTTP error, then success
+        call_count = [0]
+        def side_effect(*args, **kwargs):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                raise ConnectionError("Network unreachable")
+            elif call_count[0] == 2:
+                mock_response = Mock()
+                mock_response.status_code = 503
+                return mock_response
+            else:
+                mock_response = Mock()
+                mock_response.status_code = 200
+                mock_response.json.return_value = {'status': 'ok'}
+                return mock_response
+
+        mock_post.side_effect = side_effect
+
+        result = send_queue_result(self.queue_uuid, "test result", retry_delay=1, max_retries=5)
+
+        # Should succeed after 2 retries (1 exception + 1 HTTP error)
+        self.assertIsNotNone(result)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(call_count[0], 3)
+        self.assertEqual(mock_sleep.call_count, 2)
 
 
 if __name__ == '__main__':
