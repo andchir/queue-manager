@@ -74,6 +74,9 @@ def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=12, all=Fal
         deleted_count = 0
         skipped_count = 0
         print('total: ', len(files_list))
+        if len(files_list) == 0:
+            print('Completed.\n')
+            return
 
         # Create progress bar for this batch
         with Progress(
@@ -103,7 +106,7 @@ def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=12, all=Fal
         # Recursively process next batch if needed
         # Key fix: offset should be increased by the number of SKIPPED files, not the limit
         # Only continue if there are files to skip AND we got a full batch (otherwise we've reached the end)
-        if all and skipped_count > 0 and len(files_list) == limit:
+        if all:
             new_offset = offset + skipped_count
             delete_old_files_yadisk(dir_path, offset=new_offset, limit=limit, max_hours=max_hours, all=True)
 
