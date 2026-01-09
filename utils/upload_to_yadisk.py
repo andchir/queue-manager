@@ -77,12 +77,12 @@ def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=12, all=Fal
 
         # Create progress bar for this batch
         with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TaskProgressColumn(),
+            SpinnerColumn(style='white'),
+            TextColumn("[progress.description]{task.description}", style='white'),
+            BarColumn(style='bright_black', complete_style='white', finished_style='bright_black'),
+            TaskProgressColumn(text_format="[white]{task.percentage:>3.0f}%")
         ) as progress:
-            task = progress.add_task(f"[cyan]Processing files (offset={offset})...", total=len(files_list))
+            task = progress.add_task(f"[bright_cyan]Processing files (offset={offset})...", total=len(files_list))
 
             for item in files_list:
                 # print(item)
