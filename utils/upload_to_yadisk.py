@@ -4,6 +4,7 @@ import yadisk
 import datetime
 import sys
 import time
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 
 sys.path.append(os.path.abspath('.'))
 from config import settings
@@ -69,21 +70,42 @@ def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=12, all=Fal
         except Exception as e:
             print(e)
             files_list = []
-        count = 0
+
+        deleted_count = 0
+        skipped_count = 0
         print('total: ', len(files_list))
-        for item in files_list:
-            # print(item)
-            time_diff = now - item.created
-            if time_diff.total_seconds() / 60 / 60 > max_hours:
-                client.remove(item.path)
-                count += 1
-        print(f'Deleted {count} files in {dir_path}.')
+
+        # Create progress bar for this batch
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+        ) as progress:
+            task = progress.add_task(f"[cyan]Processing files (offset={offset})...", total=len(files_list))
+
+            for item in files_list:
+                # print(item)
+                time_diff = now - item.created
+                if time_diff.total_seconds() / 60 / 60 > max_hours:
+                    client.remove(item.path)
+                    deleted_count += 1
+                else:
+                    # File is too new, skip it
+                    skipped_count += 1
+                progress.update(task, advance=1)
+
+        print(f'Deleted {deleted_count} files, skipped {skipped_count} files in {dir_path}.')
         print('Emptying the trash bin...')
         client.remove_trash('/')
         print('Success!\n')
-        if all and len(files_list) > 0:
-            offset += limit
-            delete_old_files_yadisk(dir_path, offset=offset, limit=limit, max_hours=max_hours, all=True)
+
+        # Recursively process next batch if needed
+        # Key fix: offset should be increased by the number of SKIPPED files, not the limit
+        # Only continue if there are files to skip AND we got a full batch (otherwise we've reached the end)
+        if all and skipped_count > 0 and len(files_list) == limit:
+            new_offset = offset + skipped_count
+            delete_old_files_yadisk(dir_path, offset=new_offset, limit=limit, max_hours=max_hours, all=True)
 
 
 if __name__ == '__main__':
