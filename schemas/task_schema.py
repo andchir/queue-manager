@@ -24,7 +24,7 @@ class TaskDetailedSchema(BaseModel):
     data: str | None = None
     webhook_url: str | None = None
     api_keys: str | None = None
-    queue_list: list[QueueSchema] = None
+    # queue_list: list[QueueSchema] = None
 
     class Config:
         from_attributes = True

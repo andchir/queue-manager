@@ -23,8 +23,8 @@ class Task(Base):
     webhook_url: Mapped[str] = mapped_column(String(256), nullable=True, default=None)
     api_keys: Mapped[str] = mapped_column(String(256), nullable=True, default=None)
 
-    queue_list = relationship('models.queue.Queue', back_populates='task', cascade='all,delete-orphan',
-                              single_parent=True, lazy='subquery', passive_deletes=True)
+    # queue_list = relationship('models.queue.Queue', back_populates='task', cascade='all,delete-orphan',
+    #                           single_parent=True, lazy='subquery', passive_deletes=True)
 
     def to_read_model(self) -> TaskDetailedSchema:
         return TaskDetailedSchema(
@@ -36,5 +36,5 @@ class Task(Base):
             data=self.data,
             webhook_url=self.webhook_url,
             api_keys=self.api_keys,
-            queue_list=self.queue_list
+            # queue_list=self.queue_list
         )
