@@ -170,8 +170,23 @@ async def register(websocket):
     tmp_uuid = str(uuid.uuid4())
     tmp_key = f'tmp_{tmp_uuid}'
     logger.info(f'New connection: {tmp_uuid}')
-    await conn_manager.add_connection(tmp_key, websocket)
+
+    # Add connection to local registry first (fast, synchronous operation)
+    ws_id = id(websocket)
+    conn_manager.local_connections[tmp_key] = websocket
+    conn_manager.local_ws_to_key[ws_id] = tmp_key
     logger.info(f'Connections total: {len(conn_manager.local_connections)}')
+
+    # Store in Redis asynchronously after adding to local registry
+    async def _store_in_redis():
+        if conn_manager.redis:
+            try:
+                await conn_manager.redis.set(conn_manager._get_key_to_ws_key(tmp_key), str(ws_id))
+                await conn_manager.redis.set(conn_manager._get_ws_to_key_key(ws_id), tmp_key)
+            except Exception as e:
+                logger.error(f'Redis storage error: {e}')
+
+    asyncio.create_task(_store_in_redis())
 
     try:
         await websocket.send('..:: Hello from the Notification Center (Redis) ::..')
@@ -296,8 +311,23 @@ async def websocket_handler(scope, receive, send):
                 raise StopAsyncIteration
 
     websocket = ASGIWebSocket(scope, receive, send)
-    await conn_manager.add_connection(tmp_key, websocket)
+
+    # Add connection to local registry first (fast, synchronous operation)
+    ws_id = id(websocket)
+    conn_manager.local_connections[tmp_key] = websocket
+    conn_manager.local_ws_to_key[ws_id] = tmp_key
     logger.info(f'Connections total: {len(conn_manager.local_connections)}')
+
+    # Store in Redis asynchronously after adding to local registry
+    async def _store_in_redis():
+        if conn_manager.redis:
+            try:
+                await conn_manager.redis.set(conn_manager._get_key_to_ws_key(tmp_key), str(ws_id))
+                await conn_manager.redis.set(conn_manager._get_ws_to_key_key(ws_id), tmp_key)
+            except Exception as e:
+                logger.error(f'Redis storage error: {e}')
+
+    asyncio.create_task(_store_in_redis())
 
     try:
         await websocket.send('..:: Hello from the Notification Center (Redis) ::..')
