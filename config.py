@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     bothub_api_key: str = ''
     vsegpt_api_key: str = ''
     use_task_api_keys: bool = False
+    redis_host: str = 'localhost'
+    redis_port: int = 6379
+    redis_db: int = 0
 
     class Config:
         env_file = '.env'
