@@ -4,7 +4,22 @@ This guide provides comprehensive instructions for deploying the WebSocket serve
 
 ## Overview
 
-The WebSocket server (`web/server.py`) is a notification center that manages real-time bidirectional communication between clients. It supports:
+The WebSocket server is a notification center that manages real-time bidirectional communication between clients. Two implementations are available:
+
+### `web/server.py` (In-Memory, Single-Worker)
+- Uses local in-memory dictionaries for connection storage
+- **Best for**: Single-worker deployments, development, testing
+- **Limitations**: Does NOT support multi-worker deployments (causes "Connection not found for UUID" errors)
+- Default port: 8765
+
+### `web/server_redis.py` (Redis-Based, Multi-Worker)
+- Uses Redis for connection metadata and pub/sub for cross-worker communication
+- **Best for**: Multi-worker production deployments, high-traffic scenarios
+- **Requirements**: Redis server running
+- **Supports**: Both single-worker and multi-worker deployments
+- Default port: 8766
+
+Both implementations support:
 - Client registration with UUID-based identification
 - Message routing between specific clients
 - Automatic connection cleanup
@@ -103,11 +118,13 @@ stderr_logfile_maxbytes=100MB
 
 **Option 2: Gunicorn + Uvicorn Workers (High-Traffic Production)**
 
+**Note:** For multi-worker deployments, you **must** use `web.server_redis:app` (requires Redis) instead of `web.server:app`. This is because `web.server.py` uses local in-memory dictionaries that are not shared across worker processes, causing the "Connection not found for UUID" error. The Redis version shares connection state across all workers via Redis pub/sub.
+
 ```ini
 [supervisord]
 
 [program:queue-websocket]
-command=/YOUR/PATH/TO/queue-manager/venv/bin/gunicorn -k uvicorn.workers.UvicornWorker web.server:app --bind 0.0.0.0:8765 --workers 4 --timeout 120 --graceful-timeout 30
+command=/YOUR/PATH/TO/queue-manager/venv/bin/gunicorn -k uvicorn.workers.UvicornWorker web.server_redis:app --bind 0.0.0.0:8766 --workers 4 --timeout 120 --graceful-timeout 30
 directory=/YOUR/PATH/TO/queue-manager
 environment=PATH="/YOUR/PATH/TO/queue-manager/venv/bin:%(ENV_PATH)s"
 process_name=%(program_name)s
@@ -315,14 +332,16 @@ uvicorn web.server:app --port 8765 --log-level info
 
 For high-traffic production environments, use Gunicorn as a process manager with Uvicorn workers.
 
+**IMPORTANT:** When using multiple workers (`--workers > 1`), you **must** use `web.server_redis:app` instead of `web.server:app`. The Redis version is required for multi-worker deployments because it shares connection state across workers via Redis pub/sub. Using `web.server:app` with multiple workers will cause "Connection not found for UUID" errors.
+
 **Start the server:**
 ```bash
-# Basic usage
+# Basic usage (single worker - can use either server.py or server_redis.py)
 gunicorn -k uvicorn.workers.UvicornWorker web.server:app --bind 0.0.0.0:8765
 
-# Production configuration
-gunicorn -k uvicorn.workers.UvicornWorker web.server:app \
-    --bind 0.0.0.0:8765 \
+# Multi-worker production configuration (MUST use server_redis.py)
+gunicorn -k uvicorn.workers.UvicornWorker web.server_redis:app \
+    --bind 0.0.0.0:8766 \
     --workers 4 \
     --worker-class uvicorn.workers.UvicornWorker \
     --timeout 120 \
@@ -380,13 +399,32 @@ This method is simpler but lacks the performance optimizations and process manag
 | **Best For** | Small-Medium traffic | High traffic, production | Development, testing |
 | **Recommended For Production** | ✅ Yes | ✅ Yes (high-traffic) | ❌ No |
 
-### When to Use Each Method
+### Choosing Between web/server.py and web/server_redis.py
+
+**Use `web/server.py` (in-memory) when:**
+- Running with a single worker process
+- You don't have Redis available
+- You want the simplest possible setup
+- Development or testing environment
+- Small to medium traffic with single-worker deployment
+
+**Use `web/server_redis.py` (Redis-based) when:**
+- Running with multiple worker processes (`--workers > 1`)
+- You need to scale horizontally across multiple processes or servers
+- You need connection state persistence across server restarts
+- High-traffic production environment requiring load balancing
+- You have Redis infrastructure available
+
+**CRITICAL:** Never use `web/server.py` with `--workers > 1`. This will cause "Connection not found for UUID" errors because each worker has its own separate in-memory dictionary.
+
+### When to Use Each Deployment Method
 
 **Use Uvicorn when:**
 - You have small to medium traffic (< 1000 concurrent connections)
 - You want simple deployment with excellent performance
 - You're running on a server with limited resources
 - You prefer simplicity over advanced features
+- Single-worker deployment is sufficient
 
 **Use Gunicorn + Uvicorn when:**
 - You have high traffic (> 1000 concurrent connections)
@@ -394,6 +432,7 @@ This method is simpler but lacks the performance optimizations and process manag
 - You require zero-downtime deployments (graceful reload)
 - You want automatic load balancing across workers
 - You need advanced process management features
+- **Important:** MUST use `web.server_redis:app` when using `--workers > 1`
 
 **Use Standalone Python when:**
 - You're in development/testing environment
@@ -414,7 +453,11 @@ uvicorn web.server:app --port 9000
 
 **Gunicorn:**
 ```bash
+# Single worker - can use either server
 gunicorn -k uvicorn.workers.UvicornWorker web.server:app --bind 0.0.0.0:9000
+
+# Multiple workers - MUST use server_redis
+gunicorn -k uvicorn.workers.UvicornWorker web.server_redis:app --bind 0.0.0.0:9000 --workers 4
 ```
 
 **Standalone:**
@@ -963,7 +1006,7 @@ User=YOUR_USERNAME
 Group=YOUR_USERNAME
 WorkingDirectory=/path/to/queue-manager
 Environment="PATH=/path/to/queue-manager/venv/bin"
-ExecStart=/path/to/queue-manager/venv/bin/gunicorn -k uvicorn.workers.UvicornWorker web.server:app --bind 0.0.0.0:8765 --workers 4 --timeout 120 --graceful-timeout 30
+ExecStart=/path/to/queue-manager/venv/bin/gunicorn -k uvicorn.workers.UvicornWorker web.server_redis:app --bind 0.0.0.0:8766 --workers 4 --timeout 120 --graceful-timeout 30
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=always
 RestartSec=10

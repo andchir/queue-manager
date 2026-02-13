@@ -120,18 +120,27 @@ systemctl daemon-reload
 
 WebSocket server:
 ~~~
-# Run with uvicorn (recommended for production):
+# Run with uvicorn (single worker):
 uvicorn web.server:app --port 8765
 
-# Or with gunicorn + uvicorn workers:
-gunicorn -k uvicorn.workers.UvicornWorker web.server:app --bind 0.0.0.0:8765
+# Or with gunicorn + uvicorn workers (multi-worker):
+# IMPORTANT: Use web.server_redis:app for multi-worker deployments!
+gunicorn -k uvicorn.workers.UvicornWorker web.server_redis:app --bind 0.0.0.0:8766 --workers 4
 
-# Or run directly with Python (traditional method):
+# Redis version (supports multi-worker):
+uvicorn web.server_redis:app --port 8766
+python web/server_redis.py 8766
+
+# In-memory version (single worker only):
 python web/server.py 8765
 
 # Test the WebSocket connection:
 python -m websockets ws://localhost:8765/
+# or for Redis version:
+python -m websockets ws://localhost:8766/
 ~~~
+
+**Note:** For multi-worker deployments with gunicorn (`--workers > 1`), you **must** use `web.server_redis:app` (requires Redis). The standard `web.server:app` only supports single-worker deployments.
 
 Supervisor configuration (optional):
 ~~~
