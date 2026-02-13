@@ -5,16 +5,17 @@ import uuid
 import asyncio
 import signal
 import json
-import websockets
 import logging
 from typing import Dict, Optional
 from dataclasses import dataclass
+
+from websockets.asyncio.server import serve, ServerConnection
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Forward mapping: key (UUID or tmp_UUID) -> websocket
-CONNECTIONS: Dict[str, websockets.WebSocketServerProtocol] = {}
+CONNECTIONS: Dict[str, ServerConnection] = {}
 # Reverse mapping: websocket id -> key, for O(1) cleanup on disconnect
 WS_TO_KEY: Dict[int, str] = {}
 
@@ -98,7 +99,7 @@ async def main(port=8765):
     stop = loop.create_future()
     loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
 
-    async with websockets.serve(
+    async with serve(
         register,
         host='',
         port=port,
