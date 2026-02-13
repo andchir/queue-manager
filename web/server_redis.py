@@ -126,7 +126,7 @@ class RedisConnectionManager:
 
     async def _handle_pubsub(self):
         try:
-            async for message in self.pubsub:
+            async for message in self.pubsub.listen():
                 if message['type'] == 'message':
                     try:
                         data = json.loads(message['data'])
