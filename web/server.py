@@ -166,7 +166,7 @@ async def websocket_handler(scope, receive, send):
                     'text': message
                 })
 
-        async def __aiter__(self):
+        def __aiter__(self):
             """Async iterator for receiving messages."""
             return self
 
