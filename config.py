@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     use_task_api_keys: bool = False
     redis_host: str = 'localhost'
     redis_port: int = 6379
-    redis_db: int = 0
+    redis_db: int = 10
 
     class Config:
         env_file = '.env'
