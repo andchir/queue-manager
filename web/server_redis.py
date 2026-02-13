@@ -20,7 +20,7 @@ try:
 except ImportError:
     REDIS_HOST = 'localhost'
     REDIS_PORT = 6379
-    REDIS_DB = 0
+    REDIS_DB = 10
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
