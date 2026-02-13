@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import json
 import asyncio
 import websockets
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from config import settings
 
 
