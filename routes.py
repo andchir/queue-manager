@@ -5,7 +5,7 @@ from typing import Union, Optional
 import requests
 import codecs
 import time
-
+import logging
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, Header, status, UploadFile, Form, Body
 from sqlalchemy.exc import NoResultFound
@@ -26,6 +26,9 @@ from utils.upload_file import upload_file, delete_old_files
 from utils.webhook import webhook_post_result
 from config import settings
 from web.client import send_message
+
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
