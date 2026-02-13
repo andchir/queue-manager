@@ -120,6 +120,21 @@ systemctl daemon-reload
 
 WebSocket server:
 ~~~
+# Run with uvicorn (recommended for production):
+uvicorn web.server:app --port 8765
+
+# Or with gunicorn + uvicorn workers:
+gunicorn -k uvicorn.workers.UvicornWorker web.server:app --bind 0.0.0.0:8765
+
+# Or run directly with Python (traditional method):
+python web/server.py 8765
+
+# Test the WebSocket connection:
+python -m websockets ws://localhost:8765/
+~~~
+
+Supervisor configuration (optional):
+~~~
 sudo apt install supervisor
 
 sudo systemctl enable supervisor --now
@@ -133,9 +148,7 @@ sudo cp web/supervisord.conf /etc/supervisor/conf.d/queue-websocket.conf
 sudo systemctl status supervisor
 sudo systemctl restart supervisor
 
-python web/server.py 8765
 supervisord -c web/supervisord.conf -n
-python -m websockets ws://localhost:8765/
 ~~~
 
 Nginx config for WebSocket:
