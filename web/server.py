@@ -10,7 +10,7 @@ import logging
 from typing import Dict, Optional
 from dataclasses import dataclass
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Forward mapping: key (UUID or tmp_UUID) -> websocket
