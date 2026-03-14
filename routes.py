@@ -152,11 +152,7 @@ async def create_queue_action(
     if request.url.port is not None and request.url.port != 80:
         base_url += f':{request.url.port}'
 
-    # Perform this only once every 60 seconds.
-    current_second = int(time.time())
-    if current_second % 60 == 0:
-        restore_outdated_queue_items()
-        delete_old_files(upload_dir_path, max_hours=(settings.max_store_time / 60 / 60))
+    delete_old_files(upload_dir_path, max_hours=(settings.max_store_time / 60 / 60))
 
     if image_file is not None:
         file_name = upload_file(image_file, upload_dir_path, type='image')
