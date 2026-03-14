@@ -156,7 +156,7 @@ async def create_queue_action(
     current_second = int(time.time())
     if current_second % 60 == 0:
         restore_outdated_queue_items()
-        delete_old_files(upload_dir_path)
+        delete_old_files(upload_dir_path, max_hours=(settings.max_store_time / 60 / 60))
 
     if image_file is not None:
         file_name = upload_file(image_file, upload_dir_path, type='image')
