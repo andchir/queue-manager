@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from sqlalchemy import insert, select, update, delete
+from sqlalchemy import insert, select, update, delete, func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -62,10 +62,15 @@ class SQLAlchemyRepository(AbstractRepository):
             return None
         return obj
 
-    def find_all(self, filter=None, limit=100, sort_dir='desc'):
+    def count_all(self, filter=None):
+        stmt = select(func.count()).select_from(self.model).filter_by(**filter) if filter \
+            else select(func.count()).select_from(self.model)
+        return self.session.execute(stmt).scalar()
+
+    def find_all(self, filter=None, limit=100, offset=0, sort_dir='desc'):
         sort_dir_opt = self.model.id.desc() if sort_dir == 'desc' else self.model.id.asc()
-        stmt = select(self.model).filter_by(**filter).order_by(sort_dir_opt).limit(limit) if filter \
-            else select(self.model).order_by(sort_dir_opt).limit(limit)
+        stmt = select(self.model).filter_by(**filter).order_by(sort_dir_opt).limit(limit).offset(offset) if filter \
+            else select(self.model).order_by(sort_dir_opt).limit(limit).offset(offset)
         res = self.session.execute(stmt)
         res = [row[0].to_read_model() for row in res.all()]
         return res

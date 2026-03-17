@@ -79,6 +79,9 @@ class ResponseItemUuid(BaseModel):
 
 class ResponseQueueItems(BaseModel):
     items: list[QueueSchema]
+    total: int
+    page: int
+    limit: int
 
     class Config:
         from_attributes = True

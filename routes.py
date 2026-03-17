@@ -7,7 +7,7 @@ import codecs
 import time
 import logging
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Request, Header, status, UploadFile, Form, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Header, status, UploadFile, Form, Body
 from sqlalchemy.exc import NoResultFound
 
 from db.db import session_maker
@@ -227,17 +227,29 @@ async def create_queue_action(
 @router.get('/queue', name='Queue list', tags=['Queue'],
             dependencies=[Depends(check_authentication_header)],
             response_model=ResponseQueueItems)
-def get_queue_list_action(task_id: int | None = None, task_uuid: str | None = None, sort_dir: str = 'desc') -> Union[ResponseQueueItems, dict]:
+def get_queue_list_action(
+        task_id: int | None = None,
+        task_uuid: str | None = None,
+        sort_dir: str = 'desc',
+        page: int = 1,
+        limit: int = Query(default=20, le=100)
+) -> Union[ResponseQueueItems, dict]:
     with session_maker() as session:
         if task_uuid is not None:
             task_repository = TasksRepository(session)
             task = task_repository.find_one_by_uuid(task_uuid)
             task_id = task.id
         queue_repository = QueueRepository(session)
-        res = queue_repository.find_all(limit=100, sort_dir=sort_dir, filter={'task_id': task_id} if task_id else None)
+        filter_params = {'task_id': task_id} if task_id else None
+        offset = (page - 1) * limit
+        res = queue_repository.find_all(limit=limit, offset=offset, sort_dir=sort_dir, filter=filter_params)
+        total = queue_repository.count_all(filter=filter_params)
 
     return {
-        'items': res
+        'items': res,
+        'total': total,
+        'page': page,
+        'limit': limit
     }
 
 
