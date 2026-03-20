@@ -46,7 +46,9 @@ def _origin_allowed(origin: Optional[str], allowed: Optional[Sequence[str]]) -> 
     if allowed is None:
         return True
     if not origin:
-        return False
+        # Browsers always send Origin; Python/scripts often omit it — still allow when
+        # an allowlist is set so tools like web/client.py work behind uvicorn.
+        return True
     normalized = _normalize_origin(origin)
     return normalized in {_normalize_origin(a) for a in allowed}
 
@@ -56,6 +58,81 @@ def _asgi_origin(scope: dict) -> Optional[str]:
         if key == b'origin':
             return value.decode('latin-1')
     return None
+
+
+def _asgi_header(scope: dict, name: bytes) -> Optional[bytes]:
+    for key, value in scope.get('headers') or []:
+        if key == name:
+            return value
+    return None
+
+
+def _http_cors_allow_origin_value(scope: dict) -> Optional[str]:
+    """Value for Access-Control-Allow-Origin, or None if the request Origin is forbidden."""
+    allowed = cors_origins_for_websocket()
+    origin = _asgi_origin(scope)
+    if allowed is None:
+        return '*'
+    if _origin_allowed(origin, allowed):
+        return origin if origin else '*'
+    return None
+
+
+def _append_cors_origin_headers(headers: List[List[bytes]], acao: str) -> None:
+    headers.append([b'access-control-allow-origin', acao.encode('utf-8')])
+    if acao != '*':
+        headers.append([b'vary', b'Origin'])
+
+
+def _http_is_root_path(path: str) -> bool:
+    return path.rstrip('/') == ''
+
+
+def _http_options_preflight_headers(scope: dict, acao: str) -> List[List[bytes]]:
+    headers: List[List[bytes]] = [
+        [b'allow', b'GET, OPTIONS'],
+        [b'access-control-allow-methods', b'GET, OPTIONS'],
+        [b'access-control-max-age', b'86400'],
+    ]
+    _append_cors_origin_headers(headers, acao)
+    acrh = _asgi_header(scope, b'access-control-request-headers')
+    headers.append([b'access-control-allow-headers', acrh or b'*'])
+    return headers
+
+
+async def _asgi_send_http(
+    send,
+    status: int,
+    headers: List[List[bytes]],
+    body: bytes = b'',
+) -> None:
+    await send({
+        'type': 'http.response.start',
+        'status': status,
+        'headers': headers,
+    })
+    await send({
+        'type': 'http.response.body',
+        'body': body,
+    })
+
+
+async def _http_forbidden_origin(send) -> None:
+    await _asgi_send_http(
+        send,
+        403,
+        [[b'content-type', b'text/plain']],
+        b'Forbidden origin',
+    )
+
+
+async def _http_not_found(send) -> None:
+    await _asgi_send_http(
+        send,
+        404,
+        [[b'content-type', b'text/plain']],
+        b'WebSocket endpoint only',
+    )
 
 
 @dataclass
@@ -163,16 +240,35 @@ async def app(scope, receive, send):
     if scope['type'] == 'websocket':
         await websocket_handler(scope, receive, send)
     else:
-        # Return 404 for non-WebSocket requests
-        await send({
-            'type': 'http.response.start',
-            'status': 404,
-            'headers': [[b'content-type', b'text/plain']],
-        })
-        await send({
-            'type': 'http.response.body',
-            'body': b'WebSocket endpoint only',
-        })
+        method = scope.get('method', b'GET')
+        if isinstance(method, bytes):
+            method = method.decode('latin-1')
+        path = scope.get('path') or '/'
+        m = method.upper()
+
+        if _http_is_root_path(path) and m in ('GET', 'OPTIONS'):
+            acao = _http_cors_allow_origin_value(scope)
+            if acao is None:
+                await _http_forbidden_origin(send)
+                return
+            if m == 'GET':
+                body = (
+                    'Queue Manager WebSocket — use ws:// with a WebSocket client.\n'
+                    'Example: python -m websockets ws://127.0.0.1:8765/\n'
+                ).encode('utf-8')
+                headers = [[b'content-type', b'text/plain; charset=utf-8']]
+                _append_cors_origin_headers(headers, acao)
+                await _asgi_send_http(send, 200, headers, body)
+                return
+            await _asgi_send_http(
+                send,
+                204,
+                _http_options_preflight_headers(scope, acao),
+                b'',
+            )
+            return
+
+        await _http_not_found(send)
 
 
 async def websocket_handler(scope, receive, send):
