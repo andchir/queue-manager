@@ -6,10 +6,12 @@ import asyncio
 import signal
 import json
 import logging
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Sequence
 from dataclasses import dataclass
 
 from websockets.asyncio.server import serve, ServerConnection
+
+from config import settings
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -18,6 +20,42 @@ logger = logging.getLogger(__name__)
 CONNECTIONS: Dict[str, ServerConnection] = {}
 # Reverse mapping: websocket id -> key, for O(1) cleanup on disconnect
 WS_TO_KEY: Dict[int, str] = {}
+
+
+def _normalize_origin(value: str) -> str:
+    return value.strip().rstrip('/')
+
+
+def cors_origins_for_websocket() -> Optional[Sequence[str]]:
+    """
+    Values for websockets.serve(origins=...): None means no Origin check.
+    Otherwise exact-match strings (RFC6454 Origin, no trailing slash).
+    """
+    raw = (settings.cors_allowed_origins or '').strip()
+    if not raw:
+        return None
+    out: List[str] = []
+    for part in raw.split(','):
+        n = _normalize_origin(part)
+        if n:
+            out.append(n)
+    return out or None
+
+
+def _origin_allowed(origin: Optional[str], allowed: Optional[Sequence[str]]) -> bool:
+    if allowed is None:
+        return True
+    if not origin:
+        return False
+    normalized = _normalize_origin(origin)
+    return normalized in {_normalize_origin(a) for a in allowed}
+
+
+def _asgi_origin(scope: dict) -> Optional[str]:
+    for key, value in scope.get('headers') or []:
+        if key == b'origin':
+            return value.decode('latin-1')
+    return None
 
 
 @dataclass
@@ -105,7 +143,8 @@ async def main(port=8765):
         port=port,
         reuse_port=True,
         ping_interval=60,
-        ping_timeout=30
+        ping_timeout=30,
+        origins=cors_origins_for_websocket(),
     ):
         await stop  # Waiting for SIGTERM signal to terminate
 
@@ -143,7 +182,15 @@ async def websocket_handler(scope, receive, send):
     if message['type'] != 'websocket.connect':
         return
 
-    # Accept the connection
+    allowed = cors_origins_for_websocket()
+    if not _origin_allowed(_asgi_origin(scope), allowed):
+        await send({
+            'type': 'websocket.close',
+            'code': 1008,
+            'reason': 'Forbidden origin',
+        })
+        return
+
     await send({'type': 'websocket.accept'})
 
     tmp_uuid = str(uuid.uuid4())

@@ -22,9 +22,16 @@ class Settings(BaseSettings):
     redis_host: str = 'localhost'
     redis_port: int = 6379
     redis_db: int = 10
+    cors_allowed_origins: str = 'http://localhost,http://localhost:8001,http://localhost:4200,http://127.0.0.1:4200'
 
     class Config:
         env_file = '.env'
+
+    def cors_origins_list(self) -> list[str]:
+        raw = (self.cors_allowed_origins or '').strip()
+        if not raw:
+            return []
+        return [p.strip().rstrip('/') for p in raw.split(',') if p.strip()]
 
 
 settings = Settings()
