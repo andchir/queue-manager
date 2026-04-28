@@ -508,6 +508,95 @@ async def proxy_post_action(uuid: str, request: Request) -> Union[DataResponseSu
     return resp_content if type(resp_content) is dict else {'result': resp_content}
 
 
+@router.post('/proxy_post_queue/{uuid}', name='Proxy POST request with Queue', tags=['Proxy'],
+             dependencies=[Depends(check_authentication_header)])
+async def proxy_post_queue_action(uuid: str, request: Request) -> Union[DataResponseSuccess, dict]:
+    """Send a POST request through a proxy and automatically create a Queue item.
+    Any payload key whose name contains 'webhook' or 'callback' (case-insensitive)
+    will have its value replaced with the full URL of the created queue result endpoint
+    so the remote service can post its result back via /queue_result/{queue_uuid}.
+    """
+
+    with session_maker() as session:
+        repository = ProxyRepository(session)
+        proxy_item = repository.find_one_by_uuid(uuid)
+
+    if proxy_item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Item with UUID {uuid} not found.')
+
+    payload = None
+    try:
+        payload = await request.json()
+    except Exception as e:
+        print(str(e))
+
+    base_url = f'{request.url.scheme}://{request.url.hostname}'
+    if request.url.port is not None and request.url.port != 80:
+        base_url += f':{request.url.port}'
+
+    with session_maker() as session:
+        queue_repository = QueueRepository(session)
+        queue_item = queue_repository.add_one(
+            QueueAddSchema(
+                status=QueueStatus.PENDING.value,
+                task_id=None,
+                data=payload or {},
+            ).model_dump()
+        )
+
+    if queue_item is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Failed to create queue item.')
+
+    queue_result_url = f'{base_url}/queue_result/{queue_item.uuid}'
+
+    def inject_webhook_url(obj: dict, callback_url: str) -> dict:
+        result = {}
+        for key, value in obj.items():
+            if isinstance(value, dict):
+                result[key] = inject_webhook_url(value, callback_url)
+            elif isinstance(value, str) and any(kw in key.lower() for kw in ('webhook', 'callback')):
+                result[key] = callback_url
+            else:
+                result[key] = value
+        return result
+
+    modified_payload = inject_webhook_url(payload, queue_result_url) if isinstance(payload, dict) else payload
+
+    req_headers = dict(request.headers)
+    query_params = dict(request.query_params)
+    request_url = proxy_item.url
+
+    headers = {
+        'Content-Type': req_headers['content-type'] if 'content-type' in req_headers else 'application/json'
+    }
+    if 'authorization' in req_headers:
+        headers['Authorization'] = req_headers['authorization']
+
+    response = requests.request('post', request_url, json=modified_payload, headers=headers, params=query_params, verify=True)
+
+    status_code = int(response.status_code)
+    try:
+        resp_content = response.content.decode('utf-8')
+    except Exception as e:
+        print(str(e))
+        resp_content = 'Error.'
+
+    if resp_content.startswith('{') or resp_content.startswith('['):
+        resp_content = json.loads(resp_content)
+
+    resp_headers = dict(response.headers)
+    if 'Content-Length' in resp_headers:
+        del resp_headers['Content-Length']
+
+    if status_code != 200:
+        raise HTTPException(status_code=status_code, detail=resp_content, headers=resp_headers)
+
+    result = resp_content if isinstance(resp_content, dict) else {'result': resp_content}
+    result['queue_uuid'] = queue_item.uuid
+    result['queue_url'] = f'{base_url}/queue/{queue_item.uuid}'
+    return result
+
+
 @router.get('/proxy_get/{uuid}', name='Proxy GET request', tags=['Proxy'],
             dependencies=[Depends(check_authentication_header)])
 async def proxy_get_action(uuid: str, request: Request) -> Union[DataResponseSuccess, dict]:
