@@ -4,7 +4,7 @@ from datetime import datetime
 
 class QueueSchema(BaseModel):
     id: int
-    task_id: int
+    task_id: int | None = None
     uuid: str
     status: str
     owner: str | None = None
