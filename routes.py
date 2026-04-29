@@ -530,7 +530,8 @@ async def proxy_post_queue_action(uuid: str, request: Request) -> Union[DataResp
     except Exception as e:
         print(str(e))
 
-    base_url = f'{request.url.scheme}://{request.url.hostname}'
+    # base_url = f'{request.url.scheme}://{request.url.hostname}'
+    base_url = f'https://{request.url.hostname}'
     if request.url.port is not None and request.url.port != 80:
         base_url += f':{request.url.port}'
 
