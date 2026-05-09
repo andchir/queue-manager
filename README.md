@@ -86,13 +86,25 @@ http {
         location / {
             include proxy_params;
             proxy_pass http://unix:/run/queue_manager_gunicorn.sock;
-            proxy_set_header   Host             $host;
-            proxy_set_header   X-Real-IP        $remote_addr;
-            proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+            proxy_set_header   Host              $host;
+            proxy_set_header   X-Real-IP         $remote_addr;
+            proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $scheme;
+            proxy_set_header   X-Forwarded-Host  $host;
+            proxy_set_header   X-Forwarded-Port  $server_port;
         }
     }
 }
 ...
+~~~
+
+**Important:** the `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-Port` headers above are required so that the application can build absolute URLs (upload links, webhook callback URLs, etc.) using the original `https` scheme and the original host/port instead of the internal `http` address that nginx uses to talk to the upstream socket.
+
+When starting the app behind a reverse proxy, also pass `--proxy-headers` (and `--forwarded-allow-ips='*'` for trusted proxies) to uvicorn / gunicorn so that Starlette itself honors those headers:
+~~~
+gunicorn -k uvicorn.workers.UvicornWorker main:app \
+    --bind unix:/run/queue_manager_gunicorn.sock \
+    --forwarded-allow-ips='*'
 ~~~
 
 Services:

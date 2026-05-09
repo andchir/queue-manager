@@ -21,6 +21,7 @@ from schemas.response import DataResponseSuccess, ResponseTasksItems, ResponseIt
     ResponseItemUuid, ResponseProxyItems, DataResponseDeletedSuccess, ResponseItemTask
 from schemas.task_schema import TaskAddSchema, TaskUpdateSchema, TaskSchema, TaskDetailedSchema
 from utils.proxy_media_urls import proxy_media_in_result
+from utils.request_url import get_base_url
 from utils.restore_outdated_queue_items import restore_outdated_queue_items
 from utils.security import check_authentication_header, check_authentication_header_task
 from utils.upload_file import upload_file, delete_old_files
@@ -149,9 +150,7 @@ async def create_queue_action(
         print(str(e))
 
     upload_dir_path = os.path.join(ROOT_DIR, 'uploads')
-    base_url = f'{request.url.scheme}://{request.url.hostname}'
-    if request.url.port is not None and request.url.port != 80:
-        base_url += f':{request.url.port}'
+    base_url = get_base_url(request)
 
     delete_old_files(upload_dir_path, max_hours=(settings.max_store_time / 60 / 60))
 
@@ -341,9 +340,7 @@ async def set_queue_result_action(request: Request, queue_item: QueueResultSchem
 
         if settings.proxy_results_media and isinstance(result_data, dict):
             upload_dir_path = os.path.join(ROOT_DIR, 'uploads')
-            base_url = f'{request.url.scheme}://{request.url.hostname}'
-            if request.url.port is not None and request.url.port not in (80, 443):
-                base_url += f':{request.url.port}'
+            base_url = get_base_url(request)
             result_data = proxy_media_in_result(result_data, upload_dir_path, base_url)
 
         result_status = QueueStatus.COMPLETED.value if 'code' not in result_data or result_data['code'] == 200 \
@@ -538,10 +535,7 @@ async def proxy_post_queue_action(uuid: str, request: Request) -> Union[DataResp
     except Exception as e:
         print(str(e))
 
-    # base_url = f'{request.url.scheme}://{request.url.hostname}'
-    base_url = f'https://{request.url.hostname}'
-    if request.url.port is not None and request.url.port != 80:
-        base_url += f':{request.url.port}'
+    base_url = get_base_url(request)
 
     with session_maker() as session:
         queue_repository = QueueRepository(session)
