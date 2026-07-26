@@ -344,11 +344,11 @@ async def set_queue_result_action(request: Request, queue_item: QueueResultSchem
             result_data = proxy_media_in_result(result_data, upload_dir_path, base_url)
 
         result_status = QueueStatus.PROCESSING.value
-        if result_data.get('code') in [200, 201]:
+        if result_data.get('code') in (200, 201):
             result_status = QueueStatus.COMPLETED.value
-        if result_data.get('code') in [500, 502, 400, 401, 403, 404]:
+        if result_data.get('code') in (500, 502, 400, 401, 403, 404):
             result_status = QueueStatus.ERROR.value
-        if result_data.get('status') in ['error', 'fail']:
+        if result_data.get('status') in ('error', 'fail', 'timeout'):
             result_status = QueueStatus.ERROR.value
 
         if res is not None:
