@@ -343,8 +343,13 @@ async def set_queue_result_action(request: Request, queue_item: QueueResultSchem
             base_url = get_base_url(request)
             result_data = proxy_media_in_result(result_data, upload_dir_path, base_url)
 
-        result_status = QueueStatus.COMPLETED.value if 'code' not in result_data or result_data['code'] == 200 \
-            else QueueStatus.PROCESSING.value
+        result_status = QueueStatus.PROCESSING.value
+        if result_data.get('code') in [200, 201]:
+            result_status = QueueStatus.COMPLETED.value
+        if result_data.get('code') in [500, 502, 400, 401, 403, 404]:
+            result_status = QueueStatus.ERROR.value
+        if result_data.get('status') in ['error', 'fail']:
+            result_status = QueueStatus.ERROR.value
 
         if res is not None:
             result = queue_repository.update_one({
@@ -591,7 +596,7 @@ async def proxy_post_queue_action(uuid: str, request: Request) -> Union[DataResp
     if 'Content-Length' in resp_headers:
         del resp_headers['Content-Length']
 
-    if status_code != 200:
+    if status_code not in [200, 201]:
         raise HTTPException(status_code=status_code, detail=resp_content, headers=resp_headers)
 
     result = resp_content if isinstance(resp_content, dict) else {'result': resp_content}
