@@ -11,7 +11,7 @@ def image_get_size(image_path):
     return [width, height]
 
 
-def image_resize(image_path, base_width=2000, up_scale=False, return_size=False):
+def image_resize(image_path, base_width=2000, up_scale=False, return_size=False, base_size=None):
     ext = image_path.split('.')[-1]
     if ext not in ['jpg', 'jpeg', 'png']:
         return (image_path, []) if return_size else image_path
@@ -20,17 +20,29 @@ def image_resize(image_path, base_width=2000, up_scale=False, return_size=False)
     img = ImageOps.exif_transpose(img)
 
     width, height = img.size
-    if width <= base_width and not up_scale:
-        return (image_path, [width, height]) if return_size else image_path
+
+    if base_size is not None:
+        if max(width, height) <= base_size and not up_scale:
+            return (image_path, [width, height]) if return_size else image_path
+
+        if width >= height:
+            target_width = base_size
+            target_height = int(height * (target_width / width))
+        else:
+            target_height = base_size
+            target_width = int(width * (target_height / height))
+    else:
+        if width <= base_width and not up_scale:
+            return (image_path, [width, height]) if return_size else image_path
+        w_percent = base_width / float(width)
+        target_width = base_width
+        target_height = int(height * w_percent)
+
     output_path = image_path.replace('.' + ext, '_resized.' + ext)
-    w_percent = (base_width / float(width))
-    h_size = int((float(height) * float(w_percent)))
-
-    img = img.resize((base_width, h_size), Image.Resampling.LANCZOS)
+    img = img.resize((target_width, target_height), Image.Resampling.LANCZOS)
     img.save(output_path, subsampling=0, quality=92)
-    width, height = img.size
 
-    return (output_path, [width, height]) if return_size else output_path
+    return (output_path, [target_width, target_height]) if return_size else output_path
 
 
 def convert_to_jpg(image_path):
