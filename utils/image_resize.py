@@ -1,6 +1,16 @@
 from PIL import Image, ImageOps
 
 
+def fix_photo_orientation(image_path):
+    img = Image.open(image_path)
+    img_fixed = ImageOps.exif_transpose(img)
+    if image_path.lower().endswith(('.jpg', '.jpeg')):
+        img_fixed.save(image_path, quality=95, subsampling=0)
+    else:
+        img_fixed.save(image_path)
+    return image_path
+
+
 def image_get_size(image_path):
     ext = image_path.split('.')[-1]
     if ext not in ['jpg', 'jpeg', 'png']:
