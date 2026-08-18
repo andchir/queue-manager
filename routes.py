@@ -344,15 +344,18 @@ async def set_queue_result_action(request: Request, queue_item: QueueResultSchem
             result_data = proxy_media_in_result(result_data, upload_dir_path, base_url)
 
         result_status = QueueStatus.PROCESSING.value
-        if result_data.get('code') in (200, 201):
+        result_code = result_data.get('code', 200) if result_data else 200
+        result_input_status = result_data.get('status', '') if result_data else ''
+        if result_code in (200, 201):
             result_status = QueueStatus.COMPLETED.value
-        if result_data.get('code') in (500, 501, 502, 400, 401, 403, 404):
+        if result_code in (500, 501, 502, 400, 401, 403, 404):
             result_status = QueueStatus.ERROR.value
-        if result_data.get('status') in ('error', 'fail', 'timeout'):
+        if result_input_status in ('error', 'fail', 'timeout'):
             result_status = QueueStatus.ERROR.value
 
-        logger.debug('CODE: ' + str(result_data.get('code')))
-        logger.debug('STATUS: ' + result_status)
+        logger.debug('RESULT CODE: ' + str(result_code))
+        logger.debug('RESULT STATUS: ' + result_input_status)
+        logger.debug('TASK STATUS: ' + result_status)
 
         if res is not None:
             result = queue_repository.update_one({
