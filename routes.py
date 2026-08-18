@@ -7,6 +7,7 @@ import codecs
 import time
 import logging
 import uuid
+from logging.handlers import RotatingFileHandler
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Header, status, UploadFile, Form, Body
 from sqlalchemy.exc import NoResultFound
 
@@ -29,11 +30,30 @@ from utils.webhook import webhook_post_result
 from config import settings
 from web.client import send_message
 
-logging.basicConfig(level=logging.WARNING)
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+debug_log_path = os.path.join(ROOT_DIR, 'debug.log')
+if not any(
+        isinstance(handler, logging.FileHandler)
+        and os.path.abspath(handler.baseFilename) == debug_log_path
+        for handler in logger.handlers
+):
+    debug_file_handler = RotatingFileHandler(
+        debug_log_path,
+        maxBytes=10 * 1024 * 1024,
+        backupCount=5,
+        encoding='utf-8',
+    )
+    debug_file_handler.setLevel(logging.DEBUG)
+    debug_file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    ))
+    logger.addHandler(debug_file_handler)
 
 router = APIRouter()
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 @router.get('/')
