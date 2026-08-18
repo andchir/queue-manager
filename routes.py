@@ -351,6 +351,9 @@ async def set_queue_result_action(request: Request, queue_item: QueueResultSchem
         if result_data.get('status') in ('error', 'fail', 'timeout'):
             result_status = QueueStatus.ERROR.value
 
+        logger.debug('CODE: ' + str(result_data.get('code')))
+        logger.debug('STATUS: ' + result_status)
+
         if res is not None:
             result = queue_repository.update_one({
                 'status': result_status,
