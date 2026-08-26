@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     mysql_connection_string: str = 'user:pass@some_mariadb/dbname?charset=utf8mb4'
     max_execution_time: int = 14400
     max_store_time: int = 43200
+    image_max_file_size: int = 20 * 1024 * 1024
+    audio_max_file_size: int = 20 * 1024 * 1024
+    video_max_file_size: int = 100 * 1024 * 1024
     gdrive_folder_id: str = ''
     yadisk_token: str = ''
     ws_enabled: str = 'true'

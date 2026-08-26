@@ -8,6 +8,7 @@ from typing import IO
 import filetype
 from pydub import AudioSegment
 
+from config import settings
 from utils.video_audio import cut_audio_duration
 
 
@@ -55,15 +56,13 @@ def upload_from_url(dir_path: str, file_url: str, type='image'):
 
 
 def validate_file_size(real_file_size, type='image'):
-    IMAGE_MAX_FILE_SIZE = 20 * 1024 * 1024  # 10MB
-    AUDIO_MAX_FILE_SIZE = 20 * 1024 * 1024  # 10MB
-    VIDEO_MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
+    max_file_sizes = {
+        'image': settings.image_max_file_size,
+        'audio': settings.audio_max_file_size,
+        'video': settings.video_max_file_size,
+    }
 
-    if (
-            (type == 'image' and real_file_size > IMAGE_MAX_FILE_SIZE)
-            or (type == 'audio' and real_file_size > AUDIO_MAX_FILE_SIZE)
-            or (type == 'video' and real_file_size > VIDEO_MAX_FILE_SIZE)
-    ):
+    if type in max_file_sizes and real_file_size > max_file_sizes[type]:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail='The file is too large.')
 
     return True
