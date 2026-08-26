@@ -63,7 +63,11 @@ def validate_file_size(real_file_size, type='image'):
     }
 
     if type in max_file_sizes and real_file_size > max_file_sizes[type]:
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail='The file is too large.')
+        max_file_size = max_file_sizes[type]
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f'The file is too large. Maximum file size is {max_file_size} bytes.',
+        )
 
     return True
 

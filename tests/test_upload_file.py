@@ -32,3 +32,7 @@ class ValidateFileSizeTestCase(unittest.TestCase):
                 with self.assertRaises(HTTPException) as error:
                     validate_file_size(file_size, type=file_type)
                 self.assertEqual(error.exception.status_code, status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+                self.assertEqual(
+                    error.exception.detail,
+                    f'The file is too large. Maximum file size is {file_size - 1} bytes.',
+                )
