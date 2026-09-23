@@ -121,7 +121,8 @@ def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=12, all=Fal
         # Only continue if there are files to skip AND we got a full batch (otherwise we've reached the end)
         if all:
             new_offset = offset + skipped_count
-            delete_old_files_yadisk(dir_path, offset=new_offset, limit=limit, max_hours=max_hours, all=True)
+            delete_old_files_yadisk(dir_path, offset=new_offset, limit=limit, max_hours=max_hours,
+                                    all=True, attempt=attempt, max_attempt=max_attempt)
 
 
 if __name__ == '__main__':
