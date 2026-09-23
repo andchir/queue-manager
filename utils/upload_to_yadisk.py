@@ -53,7 +53,7 @@ def upload_and_share_file(file_path: str, dir_path: str, type='image', attempt=1
         return meta.file, meta.public_url
 
 
-def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=12, all=False):
+def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=12, all=False, attempt=0, max_attempt=5):
     now = datetime.datetime.now(datetime.timezone.utc)
     client = yadisk.Client(token=settings.yadisk_token)
     with client:
@@ -87,16 +87,29 @@ def delete_old_files_yadisk(dir_path, offset=0, limit=100, max_hours=12, all=Fal
         ) as progress:
             task = progress.add_task(f"[bright_cyan]Processing files (offset={offset})...", total=len(files_list))
 
+            is_error = False
             for item in files_list:
                 # print(item)
                 time_diff = now - item.created
                 if time_diff.total_seconds() / 60 / 60 > max_hours:
-                    client.remove(item.path)
+                    try:
+                        client.remove(item.path)
+                    except Exception as e:
+                        print(e)
+                        is_error = True
+                        break
                     deleted_count += 1
                 else:
                     # File is too new, skip it
                     skipped_count += 1
                 progress.update(task, advance=1)
+
+        if is_error and attempt < max_attempt:
+            print(f'Retry: {attempt + 1}/{max_attempt} \n')
+            new_offset = offset + skipped_count
+            time.sleep(2)
+            return delete_old_files_yadisk(dir_path, offset=new_offset, limit=limit,
+                                           max_hours=max_hours, all=all, attempt=attempt + 1, max_attempt=max_attempt)
 
         print(f'Deleted {deleted_count} files, skipped {skipped_count} files in {dir_path}.')
         print('Emptying the trash bin...')
